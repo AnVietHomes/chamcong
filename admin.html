@@ -31,7 +31,7 @@
         
         .login-footer { margin-top: 30px; font-size: 11px; color: #001a72; text-align: center; line-height: 1.6; font-weight: 500; border-top: 1px solid #eee; padding-top: 20px;}
 
-        .dashboard-container { max-width: 1100px; margin: 40px auto; background: #fff; padding: 30px 40px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); display: none; }
+        .dashboard-container { max-width: 1200px; margin: 40px auto; background: #fff; padding: 30px 40px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); display: none; }
         .dashboard-header h3 { color: #001a72; font-weight: 800; text-transform: uppercase; font-size: 24px;}
         .table-danger td { color: #dc3545 !important; font-weight: 600; }
         .table-secondary td { background-color: #f0f4f8 !important; color: #001a72 !important; font-weight: 700;}
@@ -43,6 +43,12 @@
         .modal-box { background: #fff; width: 400px; padding: 30px; border-radius: 12px; box-shadow: 0 15px 40px rgba(0,0,0,0.2); position: relative; }
         .modal-title { font-weight: 800; color: #001a72; font-size: 18px; margin-bottom: 20px; text-transform: uppercase; text-align: center;}
         .close-btn { position: absolute; top: 15px; right: 20px; font-size: 24px; cursor: pointer; color: #999; line-height: 1;}
+        
+        /* Cấu hình thanh công cụ */
+        .toolbar-group { display: flex; gap: 15px; align-items: center; flex-wrap: wrap;}
+        .filter-date-group { display: flex; align-items: center; gap: 8px; background: #f8f9fa; padding: 5px 10px; border-radius: 8px; border: 1px solid #dee2e6;}
+        .filter-date-group input { border: 1px solid #001a72; border-radius: 4px; padding: 4px 8px; font-size: 13px;}
+        .filter-label { font-size: 12px; font-weight: 700; color: #001a72;}
     </style>
 </head>
 <body>
@@ -79,17 +85,25 @@
 </div>
 
 <div class="container dashboard-container" id="dashboardScreen">
-    <div class="d-flex justify-content-between align-items-center mb-4 dashboard-header">
+    <div class="d-flex justify-content-between align-items-center mb-4 dashboard-header flex-wrap gap-3">
         <div>
             <h3>DANH SÁCH ĐƠN CHỜ DUYỆT</h3>
             <p class="mb-0 text-muted">Xin chào, <span id="userName" class="fw-bold" style="color: #001a72;"></span> (<span id="userRole"></span>)</p>
         </div>
-        <div class="d-flex gap-3 align-items-center">
+        
+        <div class="toolbar-group">
+            <div id="dateFilterWrapper" class="filter-date-group" style="display:none;">
+                <span class="filter-label">NỘP TỪ:</span>
+                <input type="date" id="filterStartDate" onchange="renderTable()">
+                <span class="filter-label">ĐẾN:</span>
+                <input type="date" id="filterEndDate" onchange="renderTable()">
+            </div>
+
             <select id="deptFilter" class="form-select form-select-sm" style="display:none; min-width: 150px; font-weight: 600; border-color: #001a72; color: #001a72;" onchange="renderTable()">
                 <option value="ALL">Tất cả phòng ban</option>
             </select>
             
-            <button id="btnOpenExport" class="btn btn-primary btn-sm fw-bold px-3" style="border-radius: 20px; background-color: #001a72; border:none; display:none;" onclick="openExportModal()">🖨️ Tải báo cáo PDF</button>
+            <button id="btnOpenExport" class="btn btn-primary btn-sm fw-bold px-3" style="border-radius: 20px; background-color: #001a72; border:none; display:none;" onclick="openExportModal()">🖨️ Tải báo cáo</button>
 
             <button class="btn btn-outline-danger btn-sm fw-bold px-3" style="border-radius: 20px;" onclick="logout()">Đăng xuất</button>
         </div>
@@ -101,7 +115,7 @@
                 <tr>
                     <th>Họ tên</th>
                     <th>Mã NV</th>
-                    <th>Ngày</th>
+                    <th>Thời gian</th>
                     <th>Giờ</th>
                     <th>Lý do</th>
                     <th>Trạng thái</th>
@@ -118,7 +132,7 @@
 <div class="modal-overlay" id="exportModal">
     <div class="modal-box">
         <span class="close-btn" onclick="closeExportModal()">&times;</span>
-        <div class="modal-title">XUẤT FILE PDF THEO THÁNG</div>
+        <div class="modal-title">XUẤT BÁO CÁO PDF</div>
         <p class="text-muted text-center" style="font-size: 13px;">Hệ thống sẽ gom toàn bộ phiếu của tháng được chọn thành 1 file PDF (mỗi phiếu 1 trang).</p>
         
         <div class="mb-3 mt-4">
@@ -131,7 +145,8 @@
 </div>
 
 <script>
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbxh88dl4CwUSD34TV5ajAq4xkCfZ2tl1Z3E4TkNHjFTCOsT0dcobRVXqYKTuGEzERqb/exec';
+    // BẠN HÃY DÁN LINK API CỦA BẠN VÀO ĐÂY
+    const scriptURL = 'YOUR_API_LINK_HERE';
     
     let globalData = []; 
     let currentUserRole = "";
@@ -174,6 +189,7 @@
 
         if(user.role === 'HCNS') {
             document.getElementById('deptFilter').style.display = 'block';
+            document.getElementById('dateFilterWrapper').style.display = 'flex';
             document.getElementById('btnOpenExport').style.display = 'block'; 
         }
 
@@ -201,9 +217,13 @@
             });
     }
 
+    // Hàm lấy ngày nộp thực tế từ mã ID
+    function getSubmitTimeMs(id) {
+        return parseInt(id.replace("PC", ""));
+    }
+
     function isLateSubmission(id, dateStr) {
-        const submitTimeMs = parseInt(id.replace("PC", ""));
-        const submitDate = new Date(submitTimeMs);
+        const submitDate = new Date(getSubmitTimeMs(id));
         submitDate.setHours(0,0,0,0); 
         
         const absentParts = dateStr.split("-");
@@ -243,11 +263,31 @@
         let filteredData = globalData;
 
         if (currentUserRole === 'HCNS') {
+            // Lọc theo phòng ban
             const selectedDept = document.getElementById('deptFilter').value;
             if (selectedDept !== 'ALL') {
-                filteredData = globalData.filter(item => item.phongBan === selectedDept);
+                filteredData = filteredData.filter(item => item.phongBan === selectedDept);
             }
             
+            // Lọc theo thời gian thực NỘP ĐƠN
+            const startDateStr = document.getElementById('filterStartDate').value;
+            const endDateStr = document.getElementById('filterEndDate').value;
+            
+            if (startDateStr || endDateStr) {
+                const startMs = startDateStr ? new Date(startDateStr).setHours(0,0,0,0) : 0;
+                const endMs = endDateStr ? new Date(endDateStr).setHours(23,59,59,999) : Infinity;
+                
+                filteredData = filteredData.filter(item => {
+                    const submitMs = getSubmitTimeMs(item.id);
+                    return submitMs >= startMs && submitMs <= endMs;
+                });
+            }
+
+            if(filteredData.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">Không có dữ liệu trong khoảng thời gian này!</td></tr>';
+                return;
+            }
+
             const groupedData = {};
             filteredData.forEach(item => {
                 const pb = item.phongBan || "Chưa phân phòng";
@@ -271,21 +311,30 @@
     function drawRow(item, tbody) {
         const tr = document.createElement('tr');
         
+        // Tính toán hiển thị thời gian nộp nổi bật
+        const submitDateObj = new Date(getSubmitTimeMs(item.id));
+        const submitTimeStr = submitDateObj.toLocaleDateString('vi-VN') + ' ' + submitDateObj.toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'});
+
         const isLate = isLateSubmission(item.id, item.ngay);
         let noteHtml = "";
         if(isLate) {
             tr.classList.add('table-danger');
-            noteHtml = `<br><span style="font-size: 11px; color: #dc3545; font-weight: 800;">(⚠️ NỘP TRỄ HẠN)</span>`;
+            noteHtml = `<span style="font-size: 11px; color: #dc3545; font-weight: 800;">(⚠️ NỘP TRỄ HẠN)</span>`;
         }
 
+        // Tối ưu UX/UI: Truyền 'this' để thao tác xóa dòng tức thì
         let btnHtml = currentUserRole !== "HCNS" 
-            ? `<button class="btn btn-sm btn-primary fw-bold px-3" style="border-radius: 20px; background-color: #001a72; border:none;" onclick="approveRequest('${item.id}')">Xác nhận</button>`
+            ? `<button class="btn btn-sm btn-primary fw-bold px-3" style="border-radius: 20px; background-color: #001a72; border:none;" onclick="approveRequest('${item.id}', this)">Xác nhận</button>`
             : `<span class="badge bg-success" style="border-radius: 20px;">Hoàn thành</span>`;
 
         tr.innerHTML = `
             <td>${item.name}</td>
             <td>${item.maNV}</td>
-            <td>${item.ngay} ${noteHtml}</td>
+            <td>
+                <span style="color: #001a72; font-weight: 700;">Nộp: ${submitTimeStr}</span><br>
+                <span style="font-size: 12px; color: #555;">(Ngày vắng: ${item.ngay})</span><br>
+                ${noteHtml}
+            </td>
             <td>${item.gio}</td>
             <td>${item.lyDo}</td>
             <td><span class="badge bg-warning text-dark" style="border-radius: 20px;">${item.trangThai}</span></td>
@@ -294,8 +343,15 @@
         tbody.appendChild(tr);
     }
 
-    function approveRequest(id) {
+    // NÂNG CẤP TỐC ĐỘ: Duyệt đơn tức thì (Optimistic UI)
+    function approveRequest(id, btnElement) {
         if(!confirm("Bạn chắc chắn muốn duyệt phiếu này?")) return;
+        
+        // 1. Phản hồi tức thì trên giao diện (Xóa dòng hoặc làm mờ đi)
+        const tr = btnElement.closest('tr');
+        tr.style.opacity = '0.4';
+        btnElement.disabled = true;
+        btnElement.innerText = 'Đang xử lý...';
         
         const user = JSON.parse(localStorage.getItem('user'));
         const formData = new FormData();
@@ -304,12 +360,21 @@
         formData.append('role', user.role);
         formData.append('name', user.name);
 
+        // 2. Gửi lệnh xử lý ngầm (Không cần load lại toàn bộ bảng)
         fetch(scriptURL, { method: 'POST', body: new URLSearchParams(formData) })
             .then(res => res.json())
             .then(data => {
                 if(data.status === "success") {
-                    fetchData(user); 
+                    // Xóa hẳn đơn khỏi dữ liệu gốc và xóa trên giao diện
+                    globalData = globalData.filter(item => item.id !== id);
+                    tr.remove(); 
+                } else {
+                    alert("Có lỗi từ máy chủ. Vui lòng thử lại!");
+                    window.location.reload();
                 }
+            }).catch(err => {
+                alert("Lỗi kết nối mạng, thao tác chưa được ghi nhận!");
+                window.location.reload();
             });
     }
 
@@ -322,6 +387,7 @@
         if(localStorage.getItem('user')) showDashboard();
     };
 
+    /* ================= CÁC HÀM XUẤT PDF ================= */
     function getMonthYear(dateStr) {
         if (!dateStr) return "Khác";
         if (dateStr.includes('-')) {
