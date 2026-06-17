@@ -33,7 +33,6 @@
         .dashboard-container { max-width: 1200px; margin: 40px auto; background: #fff; padding: 30px 40px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); display: none; }
         .dashboard-header h3 { color: #001a72; font-weight: 800; text-transform: uppercase; font-size: 24px;}
         
-        /* BÔI ĐỎ TOÀN BỘ DÒNG QUÁ HẠN NỘP */
         .row-late td { 
             background-color: #ffeaea !important; 
             color: #c90000 !important; 
@@ -56,7 +55,6 @@
         .filter-date-group input { border: 1px solid #001a72; border-radius: 4px; padding: 4px 8px; font-size: 13px;}
         .filter-label { font-size: 12px; font-weight: 700; color: #001a72;}
         
-        /* CÔNG CỤ ADMIN */
         .admin-toolbar { background: #ffeaea; border: 1px solid #ffcccc; border-radius: 8px; padding: 5px 10px; display: flex; align-items: center; gap: 8px; }
         .admin-label { font-size: 12px; font-weight: 800; color: #c90000; }
         .admin-select { font-weight: bold; color: #c90000; border-color: #c90000; }
@@ -423,7 +421,7 @@
             noteHtml = `<br><span style="font-size: 11px; color: #fff; font-weight: 800; background: #c90000; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 5px;">⚠️ NỘP TRỄ HẠN</span>`;
         }
 
-        // TÍCH HỢP HIỂN THỊ ẢNH MINH CHỨNG
+        // TÍCH HỢP HIỂN THỊ ĐƯỜNG LINK ẢNH DRIVE CHO CÁC SẾP DUYỆT
         let linkAnhHtml = "";
         if (item.linkAnh && item.linkAnh.startsWith("http")) {
             linkAnhHtml = `<br><a href="${item.linkAnh}" target="_blank" class="badge bg-info text-dark mt-2" style="text-decoration:none; font-size: 11px; padding: 4px 8px;">🖼️ Xem ảnh</a>`;
