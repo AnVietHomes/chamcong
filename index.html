@@ -162,7 +162,7 @@
     let fileData = "";
     let fileMimeType = "";
 
-    // 1. BẮT SỰ KIỆN CHỌN ẢNH VÀ NÉN DUNG LƯỢNG SIÊU TỐC
+    // 1. CHỌN VÀ NÉN ẢNH
     document.getElementById('fileUpload').addEventListener('change', function(e) {
         const file = e.target.files[0];
         if(!file) {
@@ -173,9 +173,8 @@
         reader.onload = function(event) {
             const img = new Image();
             img.onload = function() {
-                // Nén kích thước ảnh
                 const canvas = document.createElement('canvas');
-                const MAX_WIDTH = 800; // Chiều rộng tối đa
+                const MAX_WIDTH = 800; // Nén ảnh để gửi siêu tốc
                 const scaleSize = MAX_WIDTH / img.width;
                 canvas.width = MAX_WIDTH;
                 canvas.height = img.height * scaleSize;
@@ -183,7 +182,6 @@
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-                // Ép sang định dạng JPEG với chất lượng 70% (Nhẹ, gửi nhanh)
                 const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
                 fileMimeType = 'image/jpeg';
                 fileData = dataUrl.split(',')[1];
@@ -193,7 +191,7 @@
         reader.readAsDataURL(file);
     });
 
-    // 2. XỬ LÝ GỬI FORM
+    // 2. XỬ LÝ GỬI ĐƠN VỚI GIAO THỨC TRUYỀN FILE CHUẨN
     form.addEventListener('submit', e => {
         e.preventDefault();
         
@@ -203,15 +201,16 @@
         submitBtn.disabled = true;
         submitBtn.innerText = "⏳ Đang tải ảnh và gửi đơn...";
 
-        const data = new URLSearchParams(new FormData(form));
+        // SỬ DỤNG FORMDATA NGUYÊN BẢN ĐỂ KHÔNG BỊ TRÀN ẢNH
+        const formData = new FormData(form);
+        formData.append('action', 'submitForm');
 
-        // Đính kèm ảnh đã nén
         if (fileData !== "") {
-            data.append('fileData', fileData);
-            data.append('fileMimeType', fileMimeType);
+            formData.append('fileData', fileData);
+            formData.append('fileMimeType', fileMimeType);
         }
 
-        fetch(scriptURL, { method: 'POST', body: data })
+        fetch(scriptURL, { method: 'POST', body: formData })
         .then(response => response.json())
         .then(data => {
             if(data.status === "success") {
@@ -235,7 +234,7 @@
         });
     });
 
-    // 3. CÁC HÀM TÌM KIẾM GIỮ NGUYÊN
+    // 3. CÁC HÀM TRA CỨU GIỮ NGUYÊN (ĐÃ FIX LỖI FORMDATA)
     function openModal() { document.getElementById('searchModal').style.display = 'flex'; }
     function closeModal() { 
         document.getElementById('searchModal').style.display = 'none'; 
@@ -256,7 +255,7 @@
         formData.append('name', document.getElementById('searchName').value);
         formData.append('maNV', "AVH" + document.getElementById('searchMaNV').value.trim()); 
 
-        fetch(scriptURL, { method: 'POST', body: new URLSearchParams(formData) })
+        fetch(scriptURL, { method: 'POST', body: formData })
             .then(res => res.json())
             .then(data => {
                 btn.innerText = "KIỂM TRA";
