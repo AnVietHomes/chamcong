@@ -33,11 +33,11 @@
         .dashboard-container { max-width: 1200px; margin: 40px auto; background: #fff; padding: 30px 40px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); display: none; }
         .dashboard-header h3 { color: #001a72; font-weight: 800; text-transform: uppercase; font-size: 24px;}
         
-        /* Chỉnh CSS bôi đỏ rõ rệt hơn cho các đơn trễ hạn */
-        .table-danger td { background-color: #ffeaea !important; color: #dc3545 !important; font-weight: 600; }
+        /* CSS ÉP MÀU ĐỎ CHO DÒNG QUÁ HẠN */
+        .row-late td { background-color: #ffeaea !important; color: #cc0000 !important; font-weight: 700 !important; }
         
-        .table-secondary td { background-color: #f0f4f8 !important; color: #001a72 !important; font-weight: 700;}
-        .table th { font-weight: 700; color: #001a72; }
+        .table-secondary td { background-color: #f0f4f8 !important; color: #001a72 !important; font-weight: 800;}
+        .table th { font-weight: 800; color: #001a72; }
         .table td { vertical-align: middle; font-size: 14px;}
         .badge { font-family: 'Manrope', sans-serif; font-weight: 600; padding: 6px 10px; }
 
@@ -98,11 +98,12 @@
                 <input type="date" id="filterEndDate" onchange="renderTable()">
             </div>
 
+            <!-- Bộ lọc phòng ban sẽ được bật cho cả HCNS và GĐKD -->
             <select id="deptFilter" class="form-select form-select-sm" style="display:none; min-width: 150px; font-weight: 600; border-color: #001a72; color: #001a72;" onchange="renderTable()">
                 <option value="ALL">Tất cả phòng ban</option>
             </select>
             
-            <button id="btnOpenExport" class="btn btn-primary btn-sm fw-bold px-3" style="border-radius: 20px; background-color: #001a72; border:none; display:none;" onclick="openExportModal()">🖨️ Tải báo cáo</button>
+            <button id="btnOpenExport" class="btn btn-primary btn-sm fw-bold px-3" style="border-radius: 20px; background-color: #001a72; border:none; display:none;" onclick="openExportModal()">🖨️ Tải báo cáo PDF</button>
 
             <button class="btn btn-outline-danger btn-sm fw-bold px-3" style="border-radius: 20px;" onclick="logout()">Đăng xuất</button>
         </div>
@@ -133,18 +134,16 @@
         <span class="close-btn" onclick="closeExportModal()">&times;</span>
         <div class="modal-title">XUẤT BÁO CÁO PDF</div>
         <p class="text-muted text-center" style="font-size: 13px;">Hệ thống sẽ gom toàn bộ phiếu của tháng được chọn thành 1 file PDF (mỗi phiếu 1 trang).</p>
-        
         <div class="mb-3 mt-4">
             <label class="form-label fw-bold">Chọn tháng cần xuất dữ liệu:</label>
             <select id="monthSelect" class="form-select border-primary fw-bold" style="color: #001a72;"></select>
         </div>
-        
         <button class="btn-brand mt-2" id="btnDownloadPDF" onclick="generatePDF()">⬇️ TẢI XUỐNG NGAY</button>
     </div>
 </div>
 
 <script>
-    // BẠN HÃY DÁN LINK API CỦA BẠN VÀO ĐÂY
+    // Link API của bạn
     const scriptURL = 'https://script.google.com/macros/s/AKfycbxh88dl4CwUSD34TV5ajAq4xkCfZ2tl1Z3E4TkNHjFTCOsT0dcobRVXqYKTuGEzERqb/exec';
     
     let globalData = []; 
@@ -186,8 +185,13 @@
         document.getElementById('userName').innerText = user.name;
         document.getElementById('userRole').innerText = user.role + (user.phongBan ? ` - ${user.phongBan}` : "");
 
-        if(user.role === 'HCNS') {
+        // Mở khóa bộ lọc phòng ban cho cả HCNS và GĐKD
+        if(user.role === 'HCNS' || user.role === 'GĐKD') {
             document.getElementById('deptFilter').style.display = 'block';
+        }
+        
+        // Các tính năng riêng của HCNS
+        if(user.role === 'HCNS') {
             document.getElementById('dateFilterWrapper').style.display = 'flex';
             document.getElementById('btnOpenExport').style.display = 'block'; 
         }
@@ -210,7 +214,8 @@
                 document.getElementById('loadingText').style.display = 'none';
                 if(data.status === "success") {
                     globalData = data.data; 
-                    if(user.role === 'HCNS') populateDeptFilter(globalData);
+                    // Populate filter cho cả 2 quyền
+                    if(user.role === 'HCNS' || user.role === 'GĐKD') populateDeptFilter(globalData);
                     renderTable();
                 }
             });
@@ -220,18 +225,51 @@
         return parseInt(id.replace("PC", ""));
     }
 
-    // So sánh Ngày Nộp và Ngày Vắng
+    // Hàm chuẩn hóa định dạng hiển thị thành Ngày-Tháng-Năm
+    function formatDisplayDate(dateStr) {
+        if (!dateStr) return "";
+        if (dateStr.includes('T')) {
+            dateStr = dateStr.split('T')[0];
+        }
+        
+        if (dateStr.includes('/')) {
+            const parts = dateStr.split('/');
+            return `${parts[0].padStart(2, '0')}-${parts[1].padStart(2, '0')}-${parts[2]}`; 
+        } else if (dateStr.includes('-')) {
+            const parts = dateStr.split('-');
+            if (parts[0].length === 4) {
+                return `${parts[2].padStart(2, '0')}-${parts[1].padStart(2, '0')}-${parts[0]}`;
+            }
+            return `${parts[0].padStart(2, '0')}-${parts[1].padStart(2, '0')}-${parts[2]}`;
+        }
+        return dateStr;
+    }
+
+    // So sánh thời gian chính xác để bôi đỏ
     function isLateSubmission(id, dateStr) {
         const submitDate = new Date(getSubmitTimeMs(id));
         submitDate.setHours(0,0,0,0); 
         
-        const absentParts = dateStr.split("-");
-        if(absentParts.length !== 3) return false;
+        let cleanDateStr = dateStr;
+        if (cleanDateStr.includes('T')) cleanDateStr = cleanDateStr.split('T')[0];
         
-        const absentDate = new Date(absentParts[0], absentParts[1] - 1, absentParts[2]); 
+        let absentDate;
+        if (cleanDateStr.includes('/')) {
+            const parts = cleanDateStr.split('/');
+            absentDate = new Date(parts[2], parts[1] - 1, parts[0]);
+        } else if (cleanDateStr.includes('-')) {
+            const parts = cleanDateStr.split('-');
+            if (parts[0].length === 4) {
+                absentDate = new Date(parts[0], parts[1] - 1, parts[2]);
+            } else {
+                absentDate = new Date(parts[2], parts[1] - 1, parts[0]);
+            }
+        } else {
+            absentDate = new Date(cleanDateStr); 
+        }
         absentDate.setHours(0,0,0,0);
         
-        const diffTime = submitDate - absentDate;
+        const diffTime = submitDate.getTime() - absentDate.getTime();
         const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
         
         return diffDays > 5;
@@ -263,24 +301,27 @@
 
         let filteredData = globalData;
 
-        if (currentUserRole === 'HCNS') {
+        // Bật phân tách phòng ban cho cả HCNS và GĐKD
+        if (currentUserRole === 'HCNS' || currentUserRole === 'GĐKD') {
             const selectedDept = document.getElementById('deptFilter').value;
             if (selectedDept !== 'ALL') {
                 filteredData = filteredData.filter(item => item.phongBan === selectedDept);
             }
             
-            // Bộ lọc hoạt động dựa trên thời gian nộp đơn
-            const startDateStr = document.getElementById('filterStartDate').value;
-            const endDateStr = document.getElementById('filterEndDate').value;
-            
-            if (startDateStr || endDateStr) {
-                const startMs = startDateStr ? new Date(startDateStr).setHours(0,0,0,0) : 0;
-                const endMs = endDateStr ? new Date(endDateStr).setHours(23,59,59,999) : Infinity;
+            // Bộ lọc thời gian (Chỉ dành cho HCNS)
+            if (currentUserRole === 'HCNS') {
+                const startDateStr = document.getElementById('filterStartDate').value;
+                const endDateStr = document.getElementById('filterEndDate').value;
                 
-                filteredData = filteredData.filter(item => {
-                    const submitMs = getSubmitTimeMs(item.id);
-                    return submitMs >= startMs && submitMs <= endMs;
-                });
+                if (startDateStr || endDateStr) {
+                    const startMs = startDateStr ? new Date(startDateStr).setHours(0,0,0,0) : 0;
+                    const endMs = endDateStr ? new Date(endDateStr).setHours(23,59,59,999) : Infinity;
+                    
+                    filteredData = filteredData.filter(item => {
+                        const submitMs = getSubmitTimeMs(item.id);
+                        return submitMs >= startMs && submitMs <= endMs;
+                    });
+                }
             }
 
             if(filteredData.length === 0) {
@@ -304,6 +345,7 @@
                 items.forEach(item => drawRow(item, tbody));
             }
         } else {
+            // Dành cho TPKD (chỉ xem 1 phòng nên không cần phân nhóm)
             filteredData.forEach(item => drawRow(item, tbody));
         }
     }
@@ -311,19 +353,18 @@
     function drawRow(item, tbody) {
         const tr = document.createElement('tr');
         
-        // Format lại thời gian nộp để hiển thị rõ ràng
-        const submitDateObj = new Date(getSubmitTimeMs(item.id));
-        const submitTimeStr = submitDateObj.toLocaleDateString('vi-VN') + ' ' + submitDateObj.toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'});
-
-        // Xác định xem có bị nộp trễ không (> 5 ngày)
+        const displayDate = formatDisplayDate(item.ngay);
         const isLate = isLateSubmission(item.id, item.ngay);
+        
         let noteHtml = "";
         
-        // Nếu trễ hạn, bôi đỏ cả hàng (áp dụng cho mọi tài khoản)
         if(isLate) {
-            tr.classList.add('table-danger');
-            noteHtml = `<br><span style="font-size: 11px; color: #dc3545; font-weight: 800; background: #fff; padding: 2px 4px; border-radius: 4px;">⚠️ NỘP TRỄ HẠN</span>`;
+            tr.classList.add('row-late');
+            noteHtml = `<br><span style="font-size: 11px; color: #dc3545; font-weight: 800; background: #fff; padding: 2px 4px; border-radius: 4px; display: inline-block; margin-top: 5px;">⚠️ NỘP TRỄ HẠN</span>`;
         }
+
+        const submitDateObj = new Date(getSubmitTimeMs(item.id));
+        const submitTimeStr = submitDateObj.toLocaleDateString('vi-VN') + ' ' + submitDateObj.toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'});
 
         let btnHtml = currentUserRole !== "HCNS" 
             ? `<button class="btn btn-sm btn-primary fw-bold px-3" style="border-radius: 20px; background-color: #001a72; border:none;" onclick="approveRequest('${item.id}', this)">Xác nhận</button>`
@@ -333,7 +374,7 @@
             <td>${item.name}</td>
             <td>${item.maNV}</td>
             <td>
-                <span style="font-weight: 700; font-size: 15px;">${item.ngay}</span><br>
+                <span style="font-weight: 800; font-size: 15px;">${displayDate}</span><br>
                 <span style="font-size: 12px; opacity: 0.8;">(Nộp lúc: ${submitTimeStr})</span>
                 ${noteHtml}
             </td>
@@ -387,14 +428,18 @@
 
     /* ================= CÁC HÀM XUẤT PDF ================= */
     function getMonthYear(dateStr) {
-        if (!dateStr) return "Khác";
-        if (dateStr.includes('-')) {
-            const parts = dateStr.split('-');
-            if (parts.length >= 2) return `${parts[1]}/${parts[0]}`; 
+        let cleanDate = dateStr;
+        if (cleanDate.includes('T')) cleanDate = cleanDate.split('T')[0];
+
+        if (!cleanDate) return "Khác";
+        if (cleanDate.includes('-')) {
+            const parts = cleanDate.split('-');
+            if (parts[0].length === 4) return `${parts[1]}/${parts[0]}`; 
+            return `${parts[1]}/${parts[2]}`;
         }
-        if (dateStr.includes('/')) {
-            const parts = dateStr.split('/');
-            if (parts.length === 3) return `${parts[1]}/${parts[2]}`;
+        if (cleanDate.includes('/')) {
+            const parts = cleanDate.split('/');
+            return `${parts[1]}/${parts[2]}`;
         }
         return "Khác";
     }
@@ -456,6 +501,8 @@
                 page.style.pageBreakAfter = 'always';
             }
 
+            const displayDate = formatDisplayDate(item.ngay);
+
             page.innerHTML = `
                 <div style="text-align: center; margin-bottom: 40px; border-bottom: 2px solid #001a72; padding-bottom: 20px;">
                     <h4 style="color: #333; margin: 0; font-size: 16px;">CÔNG TY CỔ PHẦN PHÁT TRIỂN DỊCH VỤ VÀ ĐỊA ỐC AN VIỆT HOMES</h4>
@@ -477,7 +524,7 @@
                     </tr>
                     <tr>
                         <td style="font-weight: 600;">4. Ngày phát sinh:</td>
-                        <td style="border-bottom: 1px dotted #ccc;">${item.ngay}</td>
+                        <td style="border-bottom: 1px dotted #ccc;">${displayDate}</td>
                     </tr>
                     <tr>
                         <td style="font-weight: 600;">5. Giờ check in/check out:</td>
