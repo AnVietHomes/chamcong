@@ -3,286 +3,115 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Phiếu Xác Nhận Chấm Công - An Việt Homes</title>
-    
-    <link rel="icon" href="favicon.svg" type="image/svg+xml">
-
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <title>Phiếu Chấm Công - An Việt Homes</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body { background-color: #dcf0fa; font-family: 'Manrope', sans-serif; color: #111; }
-        .top-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 40px; }
-        .company-info { display: flex; align-items: center; gap: 15px; }
-        .company-info img { height: 50px; }
-        .company-name { font-weight: 600; font-size: 14px; text-transform: uppercase; color: #111; line-height: 1.4; max-width: 300px;}
-        .btn-check-status { background-color: #001a72; color: #fff; border-radius: 30px; padding: 10px 25px; font-weight: 600; font-size: 14px; border: none; transition: 0.3s; }
-        .btn-check-status:hover { background-color: #00104a; color: #fff; }
-
-        .form-container { background: #fff; max-width: 800px; margin: 20px auto 50px; padding: 40px 60px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
-        .form-title { text-align: center; font-weight: 800; font-size: 26px; margin-bottom: 40px; text-transform: uppercase; }
-        
-        .row-item { display: flex; align-items: center; margin-bottom: 15px; }
-        .row-item .label-col { width: 40%; font-weight: 500; font-size: 16px; display: flex; gap: 15px;}
-        .row-item .input-col { width: 60%; }
-        .form-control, .form-select { border: none; border-bottom: 1px solid #ccc; border-radius: 0; padding: 5px 0; font-family: 'Manrope', sans-serif; font-size: 16px;}
-        .form-control:focus, .form-select:focus { box-shadow: none; border-bottom: 2px solid #001a72; background: transparent; }
-        
-        .btn-submit { background-color: #001a72; color: #fff; border-radius: 30px; padding: 12px 40px; font-weight: 700; border: none; margin-top: 30px; display: block; margin-left: auto; margin-right: auto;}
-        
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(220, 240, 250, 0.85); backdrop-filter: blur(5px); display: none; justify-content: center; align-items: center; z-index: 1000; }
-        .modal-box { background: #fff; width: 450px; padding: 40px; border-radius: 16px; box-shadow: 0 15px 40px rgba(0,0,0,0.1); position: relative; }
-        .modal-title { text-align: center; font-weight: 800; color: #001a72; font-size: 20px; margin-bottom: 30px; text-transform: uppercase; }
-        .close-btn { position: absolute; top: 15px; right: 20px; font-size: 24px; cursor: pointer; color: #999; }
-        
-        .input-group-custom { display: flex; align-items: center; border: 1px solid #ccc; border-radius: 6px; overflow: hidden; margin-bottom: 20px; background: #fff;}
-        .input-group-custom .prefix { background-color: #001a72; color: white; padding: 8px 15px; font-weight: 700; font-size: 15px;}
-        .input-group-custom input { border: none; padding: 8px 10px; width: 100%; outline: none; font-size: 15px; font-family: 'Manrope', sans-serif;}
-        
-        .custom-input-label { font-size: 12px; font-weight: 600; margin-bottom: 5px; color: #333; }
-        .btn-search { background-color: #001a72; color: #fff; border-radius: 30px; padding: 10px; width: 100%; font-weight: 700; border: none; margin-top: 10px; }
-        #resultContainer { margin-top: 20px; max-height: 200px; overflow-y: auto; font-size: 13px;}
+        body { background-color: #f4f7fa; font-family: 'Segoe UI', sans-serif; }
+        .form-container { max-width: 500px; margin: 50px auto; background: #fff; padding: 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .btn-submit { background-color: #001a72; color: white; width: 100%; padding: 12px; font-weight: bold; border-radius: 8px; border: none; }
+        .loading-overlay { display: none; text-align: center; color: #001a72; font-weight: bold; margin-top: 15px; }
     </style>
 </head>
 <body>
 
-<div class="top-header">
-    <div class="company-info">
-        <img src="logo.svg" alt="An Viet Homes Logo">
-        <div class="company-name">CÔNG TY CỔ PHẦN PHÁT TRIỂN DỊCH VỤ<br>VÀ ĐỊA ỐC AN VIỆT HOMES</div>
-    </div>
-    <button class="btn-check-status" onclick="openModal()">Kiểm tra trạng thái duyệt</button>
-</div>
-
-<div class="container">
-    <div class="form-container">
-        <div class="form-title">PHIẾU XÁC NHẬN CHẤM CÔNG</div>
-
-        <form id="chamCongForm">
-            <input type="hidden" name="action" value="submitForm">
-
-            <div class="row-item">
-                <div class="label-col"><span>1.</span> Họ và tên:</div>
-                <div class="input-col"><input type="text" class="form-control" name="hoTen" required placeholder="Nguyễn Văn A"></div>
+<div class="form-container">
+    <h3 class="text-center mb-4" style="color: #001a72; font-weight: 800;">PHIẾU XÁC NHẬN CHẤM CÔNG</h3>
+    <form id="chamCongForm">
+        <div class="mb-3">
+            <label class="form-label">Họ và tên</label>
+            <input type="text" name="hoTen" class="form-control" required placeholder="Ví dụ: Nguyễn Văn A">
+        </div>
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Mã nhân viên</label>
+                <input type="text" name="maNV" class="form-control" required placeholder="Ví dụ: AVH123">
             </div>
-
-            <div class="row-item">
-                <div class="label-col"><span>2.</span> Mã nhân viên:</div>
-                <div class="input-col">
-                    <div class="input-group-custom" style="margin-bottom: 0;">
-                        <div class="prefix">AVH</div>
-                        <input type="text" id="inputMaNV" required placeholder="Ví dụ: 023">
-                        <input type="hidden" name="maNV" id="hiddenMaNV">
-                    </div>
-                </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Phòng ban</label>
+                <input type="text" name="phongBan" class="form-control" required placeholder="Ví dụ: AV1">
             </div>
-
-            <div class="row-item">
-                <div class="label-col"><span>3.</span> Phòng ban:</div>
-                <div class="input-col">
-                    <select class="form-select" name="phongBan" required>
-                        <option value="" disabled selected>Chọn phòng...</option>
-                        <option value="AV1">AV1</option>
-                        <option value="AV2">AV2</option>
-                        <option value="AV3">AV3</option>
-                        <option value="AV5">AV5</option>
-                        <option value="AV6">AV6</option>
-                        <option value="AV8">AV8</option>
-                        <option value="AV9">AV9</option>
-                        <option value="AV11">AV11</option>
-                        <option value="AV12">AV12</option>
-                        <option value="AV16">AV16</option>
-                        <option value="AV19">AV19</option>
-                        <option value="AV89">AV89</option>
-                    </select>
-                </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Ngày vắng thực tế</label>
+                <input type="date" name="ngay" class="form-control" required>
             </div>
-
-            <div class="row-item">
-                <div class="label-col"><span>4.</span> Ngày:</div>
-                <div class="input-col"><input type="date" class="form-control" name="ngay" required></div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Giờ checkin/out phát sinh</label>
+                <input type="time" name="gio" class="form-control" required>
             </div>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Lý do phát sinh đơn</label>
+            <textarea name="lyDo" class="form-control" rows="3" required placeholder="Nhập lý do chi tiết..."></textarea>
+        </div>
 
-            <div class="row-item">
-                <div class="label-col"><span>5.</span> Giờ checkin/ checkout:</div>
-                <div class="input-col"><input type="text" class="form-control" name="gio" required placeholder="08:45"></div>
-            </div>
+        <div class="mb-4">
+            <label class="form-label font-weight-bold">Ảnh minh chứng đi muộn/vắng mặt</label>
+            <input type="file" id="fileUpload" class="form-control" accept="image/*" required>
+            <div class="form-text">Hệ thống chấp nhận các file định dạng ảnh chụp màn hình Zalo, Checkin...</div>
+        </div>
 
-            <div class="row-item">
-                <div class="label-col"><span>6.</span> Lý do:</div>
-                <div class="input-col"><input type="text" class="form-control" name="lyDo" required placeholder="Gặp khách hàng..."></div>
-            </div>
-
-            <div class="row-item">
-                <div class="label-col"><span>7.</span> Checkin bằng hình ảnh:</div>
-                <div class="input-col d-flex gap-4 align-items-center" style="height: 38px;">
-                    <label><input type="radio" name="coHinhAnh" value="Có" required> Có</label>
-                    <label><input type="radio" name="coHinhAnh" value="Không"> Không</label>
-                </div>
-            </div>
-
-           <div class="mb-3">
-    <label class="form-label">Ảnh minh chứng (Nếu có)</label>
-    <input type="file" id="fileUpload" class="form-control" accept="image/*">
-    <div class="form-text">Chỉ chấp nhận file ảnh (Màn hình checkin, Zalo...)</div>
-</div>
-
-            <button type="submit" class="btn-submit" id="submitBtn">Xác nhận gửi</button>
-        </form>
-    </div>
-</div>
-
-<div class="modal-overlay" id="searchModal">
-    <div class="modal-box">
-        <span class="close-btn" onclick="closeModal()">&times;</span>
-        <div class="modal-title">TRA CỨU LỊCH SỬ/ TRẠNG THÁI</div>
-        <form id="searchForm">
-            <div class="custom-input-label">Tên nhân viên</div>
-            <div class="input-group-custom">
-                <input type="text" id="searchName" placeholder="Nhập tên nhân viên" required>
-            </div>
-            <div class="custom-input-label">Mã nhân viên</div>
-            <div class="input-group-custom">
-                <div class="prefix">AVH</div>
-                <input type="text" id="searchMaNV" placeholder="Nhập số (Ví dụ: 023)" required>
-            </div>
-            <button type="submit" class="btn-search" id="btnSearch">KIỂM TRA</button>
-        </form>
-        <div id="resultContainer"></div>
-    </div>
+        <button type="submit" id="btnSubmit" class="btn-submit">GỬI PHIẾU XÁC NHẬN</button>
+        <div id="loadingText" class="loading-overlay">⏳ ĐANG XỬ LÝ HÌNH ẢNH & TẢI LÊN DRIVE... VUI LÒNG ĐỢI TRONG GIÂY LÁT!</div>
+    </form>
 </div>
 
 <script>
-    const scriptURL = 'https://script.google.com/macros/s/AKfycby8-SOtuoN-oq43NXY5743zF6K5KosWao4BJZXy3AbVXLD0ZYSikVxNXwN72_Z52DA/exec';
+    // DÁN LINK API WEB APP CỦA BẠN VÀO ĐÂY
+    const scriptURL = 'https://script.google.com/macros/s/AKfycby8-SOtuoN-oq43NXY5743zF6K5KosWao4BJZXy3AbVXLD0ZYSikVxNXwN72_Z52DA/exec'; 
+    let fileData = "";
+    let fileMimeType = "";
 
-    const form = document.forms['chamCongForm'];
-    const submitBtn = document.getElementById('submitBtn');
-
-    form.addEventListener('submit', e => {
-        e.preventDefault();
-        
-        const maSo = document.getElementById('inputMaNV').value.trim();
-        document.getElementById('hiddenMaNV').value = "AVH" + maSo;
-
-        submitBtn.disabled = true;
-        submitBtn.innerText = "Đang gửi...";
-
-        const data = new URLSearchParams(new FormData(form));
-
-        fetch(scriptURL, { method: 'POST', body: data })
-        .then(response => response.json())
-        .then(data => {
-            if(data.status === "success") {
-                alert("Đã gửi phiếu chấm công thành công!");
-                form.reset(); 
-            } else {
-                alert("Lỗi từ hệ thống: " + data.message);
-            }
-            submitBtn.disabled = false;
-            submitBtn.innerText = "Xác nhận gửi";
-        })
-        .catch(error => {
-            alert("Đã ghi nhận lệnh gửi! Vui lòng làm mới trang.");
-            form.reset();
-            submitBtn.disabled = false;
-            submitBtn.innerText = "Xác nhận gửi";
-        });
+    // Lắng nghe hành vi chọn tệp để đóng gói chuỗi Base64
+    document.getElementById('fileUpload').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if(file) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const result = event.target.result;
+                fileMimeType = result.split(';')[0].split(':')[1];
+                fileData = result.split(',')[1];
+            };
+            reader.readAsDataURL(file);
+        }
     });
 
-    let fileData = "";
-let fileMimeType = "";
-
-// Lắng nghe khi nhân sự chọn ảnh
-document.getElementById('fileUpload').addEventListener('change', function(e) {
-    var file = e.target.files[0];
-    if(file) {
-        var reader = new FileReader();
-        reader.onload = function(event) {
-            var result = event.target.result;
-            // Tách chuỗi Base64
-            fileMimeType = result.split(';')[0].split(':')[1];
-            fileData = result.split(',')[1];
-        };
-        reader.readAsDataURL(file);
-    }
-});
-
-document.getElementById('chi-tiet-id-form-cua-ban').addEventListener('submit', function(e) {
-    e.preventDefault();
-    const btn = document.getElementById('btnSubmit'); // Sửa ID nút bấm cho đúng với code của bạn
-    btn.innerText = "ĐANG TẢI ẢNH VÀ GỬI ĐƠN..."; // Cảnh báo vì up ảnh mất 2-3 giây
-    btn.disabled = true;
-
-    const formData = new FormData(this);
-    formData.append('action', 'submitForm');
-    
-    // Đính kèm dữ liệu ảnh vào form gửi đi
-    if(fileData !== "") {
-        formData.append('fileData', fileData);
-        formData.append('fileMimeType', fileMimeType);
-    }
-
-    fetch(scriptURL, { method: 'POST', body: new URLSearchParams(formData) })
-        .then(res => res.json())
-        .then(data => {
-            if(data.status === "success") {
-                alert("Nộp đơn và tải ảnh thành công!");
-                window.location.reload();
-            }
-        });
-});
-    
-    function openModal() { document.getElementById('searchModal').style.display = 'flex'; }
-    function closeModal() { 
-        document.getElementById('searchModal').style.display = 'none'; 
-        document.getElementById('resultContainer').innerHTML = '';
-        document.getElementById('searchForm').reset();
-    }
-
-    document.getElementById('searchForm').addEventListener('submit', function(e) {
+    document.getElementById('chamCongForm').addEventListener('submit', function(e) {
         e.preventDefault();
-        const btn = document.getElementById('btnSearch');
-        const resContainer = document.getElementById('resultContainer');
-        btn.innerText = "ĐANG TÌM...";
+        
+        const btn = document.getElementById('btnSubmit');
+        const loader = document.getElementById('loadingText');
+        
         btn.disabled = true;
-        resContainer.innerHTML = '<p class="text-center mt-3">Đang truy xuất dữ liệu...</p>';
+        loader.style.display = 'block';
 
-        const formData = new FormData();
-        formData.append('action', 'searchHistory');
-        formData.append('name', document.getElementById('searchName').value);
-        formData.append('maNV', "AVH" + document.getElementById('searchMaNV').value.trim()); 
+        const formData = new FormData(this);
+        formData.append('action', 'submitForm');
+        
+        if(fileData !== "") {
+            formData.append('fileData', fileData);
+            formData.append('fileMimeType', fileMimeType);
+        }
 
         fetch(scriptURL, { method: 'POST', body: new URLSearchParams(formData) })
             .then(res => res.json())
             .then(data => {
-                btn.innerText = "KIỂM TRA";
-                btn.disabled = false;
-                if(data.status === "success" && data.data.length > 0) {
-                    let html = '<ul class="list-group mt-3">';
-                    data.data.forEach(item => {
-                        let badgeColor = item.trangThai === "Đã hoàn thành" ? "bg-success" : "bg-warning text-dark";
-                        html += `
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                <div>
-                                    <strong>${item.ngay}</strong><br>
-                                    <span class="text-muted">${item.lyDo}</span>
-                                </div>
-                                <span class="badge ${badgeColor}">${item.trangThai}</span>
-                            </li>
-                        `;
-                    });
-                    html += '</ul>';
-                    resContainer.innerHTML = html;
+                if(data.status === "success") {
+                    alert("Gửi đơn và lưu trữ ảnh lên Drive thành công!");
+                    window.location.reload();
                 } else {
-                    resContainer.innerHTML = '<p class="text-center text-danger mt-3 fw-bold">Không tìm thấy dữ liệu khớp với thông tin!</p>';
+                    alert("Có lỗi từ máy chủ: " + data.message);
+                    btn.disabled = false;
+                    loader.style.display = 'none';
                 }
             })
             .catch(err => {
-                btn.innerText = "KIỂM TRA";
+                alert("Lỗi kết nối mạng, vui lòng kiểm tra lại cấu hình API!");
                 btn.disabled = false;
-                resContainer.innerHTML = '<p class="text-center text-danger mt-3">Lỗi kết nối!</p>';
+                loader.style.display = 'none';
             });
     });
 </script>
-
 </body>
 </html>
