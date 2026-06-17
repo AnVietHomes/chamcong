@@ -33,7 +33,6 @@
         .dashboard-container { max-width: 1200px; margin: 40px auto; background: #fff; padding: 30px 40px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); display: none; }
         .dashboard-header h3 { color: #001a72; font-weight: 800; text-transform: uppercase; font-size: 24px;}
         
-        /* CSS: BÔI ĐỎ TOÀN BỘ NỀN VÀ CHỮ CHO DÒNG QUÁ HẠN */
         .row-late td { 
             background-color: #ffeaea !important; 
             color: #c90000 !important; 
@@ -55,6 +54,10 @@
         .filter-date-group { display: flex; align-items: center; gap: 8px; background: #f8f9fa; padding: 5px 10px; border-radius: 8px; border: 1px solid #dee2e6;}
         .filter-date-group input { border: 1px solid #001a72; border-radius: 4px; padding: 4px 8px; font-size: 13px;}
         .filter-label { font-size: 12px; font-weight: 700; color: #001a72;}
+        
+        .admin-toolbar { background: #ffeaea; border: 1px solid #ffcccc; border-radius: 8px; padding: 5px 10px; display: flex; align-items: center; gap: 8px; }
+        .admin-label { font-size: 12px; font-weight: 800; color: #c90000; }
+        .admin-select { font-weight: bold; color: #c90000; border-color: #c90000; }
     </style>
 </head>
 <body>
@@ -82,8 +85,7 @@
 
         <div class="login-footer">
             Hệ thống quản lý dành cho leader thực hiện quá trình duyệt chấm công.<br>
-            Vui lòng đăng nhập bằng email để đồng bộ với phòng Hành chính nhân sự.<br>
-            Mật khẩu cấp một lần duy nhất. Trường hợp mất vui lòng liên hệ HCNS để được cấp lại.
+            Vui lòng đăng nhập bằng email để đồng bộ với phòng Hành chính nhân sự.
         </div>
     </div>
 </div>
@@ -92,10 +94,32 @@
     <div class="d-flex justify-content-between align-items-center mb-4 dashboard-header flex-wrap gap-3">
         <div>
             <h3>DANH SÁCH ĐƠN CHỜ DUYỆT</h3>
-            <p class="mb-0 text-muted">Xin chào, <span id="userName" class="fw-bold" style="color: #001a72;"></span> (<span id="userRole"></span>)</p>
+            <p class="mb-0 text-muted">Xin chào, <span id="userName" class="fw-bold" style="color: #001a72;"></span> <span id="userRole" class="text-danger fw-bold"></span></p>
         </div>
         
         <div class="toolbar-group">
+            <div id="adminSwitcher" class="admin-toolbar" style="display:none;">
+                <span class="admin-label">👑 ADMIN:</span>
+                <select id="adminRoleSelect" class="form-select form-select-sm admin-select" onchange="switchAdminRole()">
+                    <option value="HCNS|">Màn hình Hành chính nhân sự</option>
+                    <option value="GĐKD|">Màn hình Giám đốc khối</option>
+                    <optgroup label="Màn hình Trưởng phòng">
+                        <option value="TPKD|AV1">TPKD - Phòng AV1</option>
+                        <option value="TPKD|AV2">TPKD - Phòng AV2</option>
+                        <option value="TPKD|AV3">TPKD - Phòng AV3</option>
+                        <option value="TPKD|AV5">TPKD - Phòng AV5</option>
+                        <option value="TPKD|AV6">TPKD - Phòng AV6</option>
+                        <option value="TPKD|AV8">TPKD - Phòng AV8</option>
+                        <option value="TPKD|AV9">TPKD - Phòng AV9</option>
+                        <option value="TPKD|AV11">TPKD - Phòng AV11</option>
+                        <option value="TPKD|AV12">TPKD - Phòng AV12</option>
+                        <option value="TPKD|AV16">TPKD - Phòng AV16</option>
+                        <option value="TPKD|AV19">TPKD - Phòng AV19</option>
+                        <option value="TPKD|AV89">TPKD - Phòng AV89</option>
+                    </optgroup>
+                </select>
+            </div>
+
             <div id="dateFilterWrapper" class="filter-date-group" style="display:none;">
                 <span class="filter-label">NGÀY NỘP TỪ:</span>
                 <input type="date" id="filterStartDate" onchange="renderTable()">
@@ -120,7 +144,7 @@
                     <th>Họ tên</th>
                     <th>Mã NV</th>
                     <th>Ngày vắng</th>
-                    <th>Giờ</th>
+                    <th>Giờ checkin/out</th>
                     <th>Lý do</th>
                     <th>Trạng thái</th>
                     <th>Thao tác</th>
@@ -137,7 +161,7 @@
     <div class="modal-box">
         <span class="close-btn" onclick="closeExportModal()">&times;</span>
         <div class="modal-title">XUẤT BÁO CÁO PDF</div>
-        <p class="text-muted text-center" style="font-size: 13px;">Hệ thống sẽ gom toàn bộ phiếu của tháng được chọn thành 1 file PDF (mỗi phiếu 1 trang).</p>
+        <p class="text-muted text-center" style="font-size: 13px;">Hệ thống sẽ gom tự động <strong>2 phiếu trên 1 tờ A4</strong> (kích thước A5) để tiết kiệm giấy.</p>
         <div class="mb-3 mt-4">
             <label class="form-label fw-bold">Chọn tháng cần xuất dữ liệu:</label>
             <select id="monthSelect" class="form-select border-primary fw-bold" style="color: #001a72;"></select>
@@ -147,11 +171,10 @@
 </div>
 
 <script>
-    // Link API của bạn
     const scriptURL = 'https://script.google.com/macros/s/AKfycbxh88dl4CwUSD34TV5ajAq4xkCfZ2tl1Z3E4TkNHjFTCOsT0dcobRVXqYKTuGEzERqb/exec';
     
     let globalData = []; 
-    let currentUserRole = "";
+    let currentUserRole = ""; 
 
     document.getElementById('loginForm').addEventListener('submit', function(e) {
         e.preventDefault();
@@ -183,32 +206,56 @@
         const user = JSON.parse(localStorage.getItem('user'));
         if(!user) return;
 
-        currentUserRole = user.role;
         document.getElementById('loginScreen').style.display = 'none';
         document.getElementById('dashboardScreen').style.display = 'block';
         document.getElementById('userName').innerText = user.name;
-        document.getElementById('userRole').innerText = user.role + (user.phongBan ? ` - ${user.phongBan}` : "");
 
-        if(user.role === 'HCNS' || user.role === 'GĐKD') {
-            document.getElementById('deptFilter').style.display = 'block';
-        }
-        
-        if(user.role === 'HCNS') {
-            document.getElementById('dateFilterWrapper').style.display = 'flex';
-            document.getElementById('btnOpenExport').style.display = 'block'; 
-        }
+        if (user.role === 'ADMIN') {
+            document.getElementById('adminSwitcher').style.display = 'flex';
+            switchAdminRole(); 
+        } else {
+            currentUserRole = user.role;
+            document.getElementById('userRole').innerText = `(${user.role}${user.phongBan ? ' - ' + user.phongBan : ''})`;
+            document.getElementById('userRole').className = "text-muted"; 
 
-        fetchData(user);
+            if(user.role === 'HCNS' || user.role === 'GĐKD') {
+                document.getElementById('deptFilter').style.display = 'block';
+            }
+            if(user.role === 'HCNS') {
+                document.getElementById('dateFilterWrapper').style.display = 'flex';
+                document.getElementById('btnOpenExport').style.display = 'block'; 
+            }
+            fetchData(user); 
+        }
     }
 
-    function fetchData(user) {
+    function switchAdminRole() {
+        const val = document.getElementById('adminRoleSelect').value.split('|');
+        const spoofedRole = val[0];
+        const spoofedPhongBan = val[1];
+
+        currentUserRole = spoofedRole;
+        document.getElementById('userRole').innerText = `(Đang mô phỏng quyền: ${spoofedRole} ${spoofedPhongBan ? '- ' + spoofedPhongBan : ''})`;
+
+        document.getElementById('deptFilter').style.display = (spoofedRole === 'HCNS' || spoofedRole === 'GĐKD') ? 'block' : 'none';
+        document.getElementById('dateFilterWrapper').style.display = (spoofedRole === 'HCNS') ? 'flex' : 'none';
+        document.getElementById('btnOpenExport').style.display = (spoofedRole === 'HCNS') ? 'block' : 'none';
+
+        document.getElementById('deptFilter').value = "ALL";
+        document.getElementById('filterStartDate').value = "";
+        document.getElementById('filterEndDate').value = "";
+
+        fetchData({ role: spoofedRole, phongBan: spoofedPhongBan });
+    }
+
+    function fetchData(userObj) {
         document.getElementById('loadingText').style.display = 'block';
         document.getElementById('tableBody').innerHTML = '';
 
         const formData = new FormData();
         formData.append('action', 'getData');
-        formData.append('role', user.role);
-        formData.append('phongBan', user.phongBan);
+        formData.append('role', userObj.role);
+        formData.append('phongBan', userObj.phongBan || "");
 
         fetch(scriptURL, { method: 'POST', body: new URLSearchParams(formData) })
             .then(res => res.json())
@@ -216,7 +263,7 @@
                 document.getElementById('loadingText').style.display = 'none';
                 if(data.status === "success") {
                     globalData = data.data; 
-                    if(user.role === 'HCNS' || user.role === 'GĐKD') populateDeptFilter(globalData);
+                    if(userObj.role === 'HCNS' || userObj.role === 'GĐKD') populateDeptFilter(globalData);
                     renderTable();
                 }
             });
@@ -226,7 +273,6 @@
         return parseInt(id.replace("PC", ""));
     }
 
-    // Xử lý Ngày hiển thị chuẩn
     function formatDisplayDate(dateStr) {
         if (!dateStr) return "";
         if (dateStr.includes('T')) {
@@ -246,7 +292,6 @@
         return dateStr;
     }
 
-    // Xử lý Giờ hiển thị chuẩn (Loại bỏ lỗi 1899...Z)
     function formatDisplayTime(timeStr) {
         if (!timeStr) return "";
         if (timeStr.includes("T")) {
@@ -367,10 +412,8 @@
         const isLate = isLateSubmission(item.id, item.ngay);
         
         let noteHtml = "";
-        
-        // THÊM LỚP BÔI ĐỎ TOÀN BỘ NỀN VÀ CHỮ NẾU TRỄ HẠN
         if(isLate) {
-            tr.classList.add('row-late');
+            tr.classList.add('row-late'); 
             noteHtml = `<br><span style="font-size: 11px; color: #fff; font-weight: 800; background: #c90000; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 5px;">⚠️ NỘP TRỄ HẠN</span>`;
         }
 
@@ -406,11 +449,13 @@
         btnElement.innerText = 'Đang xử lý...';
         
         const user = JSON.parse(localStorage.getItem('user'));
+        const signName = user.role === 'ADMIN' ? `${user.name} (Quản trị viên)` : user.name;
+
         const formData = new FormData();
         formData.append('action', 'approve');
         formData.append('id', id);
-        formData.append('role', user.role);
-        formData.append('name', user.name);
+        formData.append('role', currentUserRole); 
+        formData.append('name', signName);
 
         fetch(scriptURL, { method: 'POST', body: new URLSearchParams(formData) })
             .then(res => res.json())
@@ -500,63 +545,88 @@
 
         const container = document.createElement('div');
         container.style.width = '800px'; 
-        container.style.padding = '20px';
         container.style.fontFamily = 'Manrope, sans-serif';
         container.style.color = '#111';
 
-        dataToExport.forEach((item, index) => {
+        // CHIA DỮ LIỆU THÀNH CÁC CỤM 2 PHIẾU
+        const chunks = [];
+        for (let i = 0; i < dataToExport.length; i += 2) {
+            chunks.push(dataToExport.slice(i, i + 2));
+        }
+
+        chunks.forEach((chunk, index) => {
+            // TẠO 1 TRANG A4 
             const page = document.createElement('div');
-            page.style.padding = '40px';
+            page.style.width = '100%';
+            page.style.height = '1131px'; // Cố định chiều cao tỷ lệ chuẩn A4 (800 x 1131)
             page.style.backgroundColor = '#fff';
-            if (index < dataToExport.length - 1) {
+            page.style.display = 'flex';
+            page.style.flexDirection = 'column';
+            
+            if (index < chunks.length - 1) {
                 page.style.pageBreakAfter = 'always';
             }
 
-            const displayDate = formatDisplayDate(item.ngay);
-            const displayTime = formatDisplayTime(item.gio);
-
-            page.innerHTML = `
-                <div style="text-align: center; margin-bottom: 40px; border-bottom: 2px solid #001a72; padding-bottom: 20px;">
-                    <h4 style="color: #333; margin: 0; font-size: 16px;">CÔNG TY CỔ PHẦN PHÁT TRIỂN DỊCH VỤ VÀ ĐỊA ỐC AN VIỆT HOMES</h4>
-                    <h2 style="color: #001a72; margin: 15px 0 0 0; font-size: 24px; font-weight: 800;">PHIẾU XÁC NHẬN CHẤM CÔNG</h2>
-                </div>
+            chunk.forEach((item, itemIndex) => {
+                // TẠO KHUNG CHO MỘT PHIẾU (Tương đương 1 mặt A5)
+                const ticket = document.createElement('div');
+                ticket.style.flex = '1'; // Mỗi phiếu giãn đúng 50% chiều cao trang
+                ticket.style.padding = '40px';
+                ticket.style.boxSizing = 'border-box';
                 
-                <table style="width: 100%; font-size: 16px; line-height: 2.5; border-collapse: collapse;">
-                    <tr>
-                        <td style="width: 40%; font-weight: 600;">1. Họ và tên:</td>
-                        <td style="border-bottom: 1px dotted #ccc;">${item.name}</td>
-                    </tr>
-                    <tr>
-                        <td style="font-weight: 600;">2. Mã nhân viên:</td>
-                        <td style="border-bottom: 1px dotted #ccc;">${item.maNV}</td>
-                    </tr>
-                    <tr>
-                        <td style="font-weight: 600;">3. Phòng ban:</td>
-                        <td style="border-bottom: 1px dotted #ccc;">${item.phongBan}</td>
-                    </tr>
-                    <tr>
-                        <td style="font-weight: 600;">4. Ngày phát sinh:</td>
-                        <td style="border-bottom: 1px dotted #ccc;">${displayDate}</td>
-                    </tr>
-                    <tr>
-                        <td style="font-weight: 600;">5. Giờ check in/check out:</td>
-                        <td style="border-bottom: 1px dotted #ccc;">${displayTime}</td>
-                    </tr>
-                    <tr>
-                        <td style="font-weight: 600;">6. Lý do:</td>
-                        <td style="border-bottom: 1px dotted #ccc;">${item.lyDo}</td>
-                    </tr>
-                    <tr>
-                        <td style="font-weight: 600;">7. Trạng thái phiếu:</td>
-                        <td style="border-bottom: 1px dotted #ccc; font-weight: bold; color: #001a72;">${item.trangThai}</td>
-                    </tr>
-                </table>
+                // Thêm đường kẻ ngang nét đứt ở giữa để cắt (nếu trang đó có 2 phiếu)
+                if (itemIndex === 0 && chunk.length > 1) {
+                    ticket.style.borderBottom = '1px dashed #ccc';
+                }
 
-                <div style="margin-top: 60px; text-align: right;">
-                    <p style="margin: 0; font-style: italic; font-size: 14px;">In ngày: ${new Date().toLocaleDateString('vi-VN')}</p>
-                    <p style="margin: 5px 0 0 0; font-weight: 600;">Chữ ký số nội bộ (Hệ thống AVH)</p>
-                </div>
-            `;
+                const displayDate = formatDisplayDate(item.ngay);
+                const displayTime = formatDisplayTime(item.gio);
+
+                ticket.innerHTML = `
+                    <div style="text-align: center; margin-bottom: 25px; border-bottom: 2px solid #001a72; padding-bottom: 15px;">
+                        <h4 style="color: #333; margin: 0; font-size: 15px;">CÔNG TY CỔ PHẦN PHÁT TRIỂN DỊCH VỤ VÀ ĐỊA ỐC AN VIỆT HOMES</h4>
+                        <h2 style="color: #001a72; margin: 10px 0 0 0; font-size: 22px; font-weight: 800;">PHIẾU XÁC NHẬN CHẤM CÔNG</h2>
+                    </div>
+                    
+                    <table style="width: 100%; font-size: 15px; line-height: 2.2; border-collapse: collapse;">
+                        <tr>
+                            <td style="width: 40%; font-weight: 600;">1. Họ và tên:</td>
+                            <td style="border-bottom: 1px dotted #ccc;">${item.name}</td>
+                        </tr>
+                        <tr>
+                            <td style="font-weight: 600;">2. Mã nhân viên:</td>
+                            <td style="border-bottom: 1px dotted #ccc;">${item.maNV}</td>
+                        </tr>
+                        <tr>
+                            <td style="font-weight: 600;">3. Phòng ban:</td>
+                            <td style="border-bottom: 1px dotted #ccc;">${item.phongBan}</td>
+                        </tr>
+                        <tr>
+                            <td style="font-weight: 600;">4. Ngày phát sinh:</td>
+                            <td style="border-bottom: 1px dotted #ccc;">${displayDate}</td>
+                        </tr>
+                        <tr>
+                            <td style="font-weight: 600;">5. Giờ check in/check out:</td>
+                            <td style="border-bottom: 1px dotted #ccc;">${displayTime}</td>
+                        </tr>
+                        <tr>
+                            <td style="font-weight: 600;">6. Lý do:</td>
+                            <td style="border-bottom: 1px dotted #ccc;">${item.lyDo}</td>
+                        </tr>
+                        <tr>
+                            <td style="font-weight: 600;">7. Trạng thái phiếu:</td>
+                            <td style="border-bottom: 1px dotted #ccc; font-weight: bold; color: #001a72;">${item.trangThai}</td>
+                        </tr>
+                    </table>
+
+                    <div style="margin-top: 30px; text-align: right;">
+                        <p style="margin: 0; font-style: italic; font-size: 13px;">In ngày: ${new Date().toLocaleDateString('vi-VN')}</p>
+                        <p style="margin: 5px 0 0 0; font-weight: 600; font-size: 14px;">Chữ ký số nội bộ (Hệ thống AVH)</p>
+                    </div>
+                `;
+                page.appendChild(ticket);
+            });
+
             container.appendChild(page);
         });
 
