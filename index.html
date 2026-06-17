@@ -120,10 +120,11 @@
                 </div>
             </div>
 
-            <div class="row-item">
-                <div class="label-col"><span>8.</span> Link ảnh (Nếu có):</div>
-                <div class="input-col"><input type="text" class="form-control" name="linkAnh" placeholder="https://drive.google.com/abc..."></div>
-            </div>
+           <div class="mb-3">
+    <label class="form-label">Ảnh minh chứng (Nếu có)</label>
+    <input type="file" id="fileUpload" class="form-control" accept="image/*">
+    <div class="form-text">Chỉ chấp nhận file ảnh (Màn hình checkin, Zalo...)</div>
+</div>
 
             <button type="submit" class="btn-submit" id="submitBtn">Xác nhận gửi</button>
         </form>
@@ -187,6 +188,49 @@
         });
     });
 
+    let fileData = "";
+let fileMimeType = "";
+
+// Lắng nghe khi nhân sự chọn ảnh
+document.getElementById('fileUpload').addEventListener('change', function(e) {
+    var file = e.target.files[0];
+    if(file) {
+        var reader = new FileReader();
+        reader.onload = function(event) {
+            var result = event.target.result;
+            // Tách chuỗi Base64
+            fileMimeType = result.split(';')[0].split(':')[1];
+            fileData = result.split(',')[1];
+        };
+        reader.readAsDataURL(file);
+    }
+});
+
+document.getElementById('chi-tiet-id-form-cua-ban').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const btn = document.getElementById('btnSubmit'); // Sửa ID nút bấm cho đúng với code của bạn
+    btn.innerText = "ĐANG TẢI ẢNH VÀ GỬI ĐƠN..."; // Cảnh báo vì up ảnh mất 2-3 giây
+    btn.disabled = true;
+
+    const formData = new FormData(this);
+    formData.append('action', 'submitForm');
+    
+    // Đính kèm dữ liệu ảnh vào form gửi đi
+    if(fileData !== "") {
+        formData.append('fileData', fileData);
+        formData.append('fileMimeType', fileMimeType);
+    }
+
+    fetch(scriptURL, { method: 'POST', body: new URLSearchParams(formData) })
+        .then(res => res.json())
+        .then(data => {
+            if(data.status === "success") {
+                alert("Nộp đơn và tải ảnh thành công!");
+                window.location.reload();
+            }
+        });
+});
+    
     function openModal() { document.getElementById('searchModal').style.display = 'flex'; }
     function closeModal() { 
         document.getElementById('searchModal').style.display = 'none'; 
