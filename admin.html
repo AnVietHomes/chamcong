@@ -105,8 +105,8 @@
 </div>
 
 <script>
-    // BẠN HÃY DÁN LINK API CỦA BẠN VÀO DÒNG DƯỚI ĐÂY
-    const scriptURL = 'YOUR_API_LINK_HERE';
+    // BẠN HÃY DÁN LINK API CỦA BẠN VÀO ĐÂY
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbyp1KYH_BK3iNnZ-kr4PWdt2fQ_LFlSbHH4gZ3R_0vA-opuXh2TdpM75dOxYLqQnh30/exec';
     
     let globalData = []; 
     let currentUserRole = "";
@@ -118,7 +118,10 @@
         btn.innerText = "ĐANG KIỂM TRA...";
         btn.disabled = true;
 
-        fetch(scriptURL, { method: 'POST', body: new FormData(this) })
+        // Ép kiểu dữ liệu sang URLSearchParams để Google Sheets không bị lỗi CORS
+        const formData = new URLSearchParams(new FormData(this));
+
+        fetch(scriptURL, { method: 'POST', body: formData })
             .then(res => res.json())
             .then(data => {
                 if(data.status === "success") {
@@ -129,7 +132,11 @@
                     btn.innerText = "ĐĂNG NHẬP";
                     btn.disabled = false;
                 }
-            }).catch(err => { alert("Lỗi kết nối mạng!"); btn.disabled = false; btn.innerText = "ĐĂNG NHẬP"; });
+            }).catch(err => { 
+                alert("Lỗi kết nối mạng! Vui lòng kiểm tra lại quyền truy cập API."); 
+                btn.disabled = false; 
+                btn.innerText = "ĐĂNG NHẬP"; 
+            });
     });
 
     // 2. Hàm chuyển đổi màn hình sau khi đăng nhập
@@ -160,7 +167,7 @@
         formData.append('role', user.role);
         formData.append('phongBan', user.phongBan);
 
-        fetch(scriptURL, { method: 'POST', body: formData })
+        fetch(scriptURL, { method: 'POST', body: new URLSearchParams(formData) })
             .then(res => res.json())
             .then(data => {
                 document.getElementById('loadingText').style.display = 'none';
@@ -216,7 +223,6 @@
 
         let filteredData = globalData;
 
-        // Nhóm theo phòng ban nếu là HCNS
         if (currentUserRole === 'HCNS') {
             const selectedDept = document.getElementById('deptFilter').value;
             if (selectedDept !== 'ALL') {
@@ -239,7 +245,6 @@
                 items.forEach(item => drawRow(item, tbody));
             }
         } else {
-            // TPKD và GĐKD hiển thị bình thường
             filteredData.forEach(item => drawRow(item, tbody));
         }
     }
@@ -282,7 +287,7 @@
         formData.append('role', user.role);
         formData.append('name', user.name);
 
-        fetch(scriptURL, { method: 'POST', body: formData })
+        fetch(scriptURL, { method: 'POST', body: new URLSearchParams(formData) })
             .then(res => res.json())
             .then(data => {
                 if(data.status === "success") {
@@ -297,7 +302,6 @@
         window.location.reload();
     }
 
-    // Kiểm tra đăng nhập khi mở trang
     window.onload = function() {
         if(localStorage.getItem('user')) showDashboard();
     };
