@@ -33,8 +33,13 @@
         .dashboard-container { max-width: 1200px; margin: 40px auto; background: #fff; padding: 30px 40px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); display: none; }
         .dashboard-header h3 { color: #001a72; font-weight: 800; text-transform: uppercase; font-size: 24px;}
         
-        /* CSS ÉP MÀU ĐỎ CHO DÒNG QUÁ HẠN */
-        .row-late td { background-color: #ffeaea !important; color: #cc0000 !important; font-weight: 700 !important; }
+        /* CSS: BÔI ĐỎ TOÀN BỘ NỀN VÀ CHỮ CHO DÒNG QUÁ HẠN */
+        .row-late td { 
+            background-color: #ffeaea !important; 
+            color: #c90000 !important; 
+            font-weight: 700 !important; 
+            border-bottom: 1px solid #ffcccc !important;
+        }
         
         .table-secondary td { background-color: #f0f4f8 !important; color: #001a72 !important; font-weight: 800;}
         .table th { font-weight: 800; color: #001a72; }
@@ -98,7 +103,6 @@
                 <input type="date" id="filterEndDate" onchange="renderTable()">
             </div>
 
-            <!-- Bộ lọc phòng ban sẽ được bật cho cả HCNS và GĐKD -->
             <select id="deptFilter" class="form-select form-select-sm" style="display:none; min-width: 150px; font-weight: 600; border-color: #001a72; color: #001a72;" onchange="renderTable()">
                 <option value="ALL">Tất cả phòng ban</option>
             </select>
@@ -185,12 +189,10 @@
         document.getElementById('userName').innerText = user.name;
         document.getElementById('userRole').innerText = user.role + (user.phongBan ? ` - ${user.phongBan}` : "");
 
-        // Mở khóa bộ lọc phòng ban cho cả HCNS và GĐKD
         if(user.role === 'HCNS' || user.role === 'GĐKD') {
             document.getElementById('deptFilter').style.display = 'block';
         }
         
-        // Các tính năng riêng của HCNS
         if(user.role === 'HCNS') {
             document.getElementById('dateFilterWrapper').style.display = 'flex';
             document.getElementById('btnOpenExport').style.display = 'block'; 
@@ -214,7 +216,6 @@
                 document.getElementById('loadingText').style.display = 'none';
                 if(data.status === "success") {
                     globalData = data.data; 
-                    // Populate filter cho cả 2 quyền
                     if(user.role === 'HCNS' || user.role === 'GĐKD') populateDeptFilter(globalData);
                     renderTable();
                 }
@@ -225,7 +226,7 @@
         return parseInt(id.replace("PC", ""));
     }
 
-    // Hàm chuẩn hóa định dạng hiển thị thành Ngày-Tháng-Năm
+    // Xử lý Ngày hiển thị chuẩn
     function formatDisplayDate(dateStr) {
         if (!dateStr) return "";
         if (dateStr.includes('T')) {
@@ -245,7 +246,18 @@
         return dateStr;
     }
 
-    // So sánh thời gian chính xác để bôi đỏ
+    // Xử lý Giờ hiển thị chuẩn (Loại bỏ lỗi 1899...Z)
+    function formatDisplayTime(timeStr) {
+        if (!timeStr) return "";
+        if (timeStr.includes("T")) {
+            const d = new Date(timeStr);
+            if (!isNaN(d.getTime())) {
+                return d.toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'});
+            }
+        }
+        return timeStr;
+    }
+
     function isLateSubmission(id, dateStr) {
         const submitDate = new Date(getSubmitTimeMs(id));
         submitDate.setHours(0,0,0,0); 
@@ -301,14 +313,12 @@
 
         let filteredData = globalData;
 
-        // Bật phân tách phòng ban cho cả HCNS và GĐKD
         if (currentUserRole === 'HCNS' || currentUserRole === 'GĐKD') {
             const selectedDept = document.getElementById('deptFilter').value;
             if (selectedDept !== 'ALL') {
                 filteredData = filteredData.filter(item => item.phongBan === selectedDept);
             }
             
-            // Bộ lọc thời gian (Chỉ dành cho HCNS)
             if (currentUserRole === 'HCNS') {
                 const startDateStr = document.getElementById('filterStartDate').value;
                 const endDateStr = document.getElementById('filterEndDate').value;
@@ -345,7 +355,6 @@
                 items.forEach(item => drawRow(item, tbody));
             }
         } else {
-            // Dành cho TPKD (chỉ xem 1 phòng nên không cần phân nhóm)
             filteredData.forEach(item => drawRow(item, tbody));
         }
     }
@@ -354,13 +363,15 @@
         const tr = document.createElement('tr');
         
         const displayDate = formatDisplayDate(item.ngay);
+        const displayTime = formatDisplayTime(item.gio);
         const isLate = isLateSubmission(item.id, item.ngay);
         
         let noteHtml = "";
         
+        // THÊM LỚP BÔI ĐỎ TOÀN BỘ NỀN VÀ CHỮ NẾU TRỄ HẠN
         if(isLate) {
             tr.classList.add('row-late');
-            noteHtml = `<br><span style="font-size: 11px; color: #dc3545; font-weight: 800; background: #fff; padding: 2px 4px; border-radius: 4px; display: inline-block; margin-top: 5px;">⚠️ NỘP TRỄ HẠN</span>`;
+            noteHtml = `<br><span style="font-size: 11px; color: #fff; font-weight: 800; background: #c90000; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 5px;">⚠️ NỘP TRỄ HẠN</span>`;
         }
 
         const submitDateObj = new Date(getSubmitTimeMs(item.id));
@@ -375,10 +386,10 @@
             <td>${item.maNV}</td>
             <td>
                 <span style="font-weight: 800; font-size: 15px;">${displayDate}</span><br>
-                <span style="font-size: 12px; opacity: 0.8;">(Nộp lúc: ${submitTimeStr})</span>
+                <span style="font-size: 11px; opacity: 0.8;">(Nộp: ${submitTimeStr})</span>
                 ${noteHtml}
             </td>
-            <td>${item.gio}</td>
+            <td><span style="font-weight: 700;">${displayTime}</span></td>
             <td>${item.lyDo}</td>
             <td><span class="badge bg-warning text-dark" style="border-radius: 20px;">${item.trangThai}</span></td>
             <td>${btnHtml}</td>
@@ -502,6 +513,7 @@
             }
 
             const displayDate = formatDisplayDate(item.ngay);
+            const displayTime = formatDisplayTime(item.gio);
 
             page.innerHTML = `
                 <div style="text-align: center; margin-bottom: 40px; border-bottom: 2px solid #001a72; padding-bottom: 20px;">
@@ -528,7 +540,7 @@
                     </tr>
                     <tr>
                         <td style="font-weight: 600;">5. Giờ check in/check out:</td>
-                        <td style="border-bottom: 1px dotted #ccc;">${item.gio}</td>
+                        <td style="border-bottom: 1px dotted #ccc;">${displayTime}</td>
                     </tr>
                     <tr>
                         <td style="font-weight: 600;">6. Lý do:</td>
