@@ -101,8 +101,12 @@
             <div id="adminSwitcher" class="admin-toolbar" style="display:none;">
                 <span class="admin-label">👑 ADMIN:</span>
                 <select id="adminRoleSelect" class="form-select form-select-sm admin-select" onchange="switchAdminRole()">
-                    <option value="HCNS|">Màn hình Hành chính nhân sự</option>
-                    <option value="GĐKD|">Màn hình Giám đốc khối</option>
+                    <option value="HCNS|ALL">Màn hình Hành chính nhân sự</option>
+                    <optgroup label="Mô phỏng Giám đốc khối">
+                        <option value="GĐKD|AV1, AV2, AV3">GĐKD - Khối 1 (VD: AV1, AV2, AV3)</option>
+                        <option value="GĐKD|AV5, AV6, AV8, AV9">GĐKD - Khối 2 (VD: AV5, AV6, AV8, AV9)</option>
+                        <option value="GĐKD|AV11, AV12, AV16, AV19, AV89">GĐKD - Khối 3 (VD: AV11, AV12...)</option>
+                    </optgroup>
                     <optgroup label="Màn hình Trưởng phòng">
                         <option value="TPKD|AV1">TPKD - Phòng AV1</option>
                         <option value="TPKD|AV2">TPKD - Phòng AV2</option>
@@ -171,7 +175,7 @@
 </div>
 
 <script>
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbxiSMKHNSSRaJu5w_AYq07v_a-lb3eTeo0UXNJjLF8bi8KxQ5zw3h4kIzOqmZck01ty/exec';
+    const scriptURL = 'https://script.google.com/macros/s/AKfycby8-SOtuoN-oq43NXY5743zF6K5KosWao4BJZXy3AbVXLD0ZYSikVxNXwN72_Z52DA/exec';
     
     let globalData = []; 
     let currentUserRole = ""; 
@@ -548,17 +552,15 @@
         container.style.fontFamily = 'Manrope, sans-serif';
         container.style.color = '#111';
 
-        // CHIA DỮ LIỆU THÀNH CÁC CỤM 2 PHIẾU
         const chunks = [];
         for (let i = 0; i < dataToExport.length; i += 2) {
             chunks.push(dataToExport.slice(i, i + 2));
         }
 
         chunks.forEach((chunk, index) => {
-            // TẠO 1 TRANG A4 
             const page = document.createElement('div');
             page.style.width = '100%';
-            page.style.height = '1131px'; // Cố định chiều cao tỷ lệ chuẩn A4 (800 x 1131)
+            page.style.height = '1131px'; 
             page.style.backgroundColor = '#fff';
             page.style.display = 'flex';
             page.style.flexDirection = 'column';
@@ -568,13 +570,11 @@
             }
 
             chunk.forEach((item, itemIndex) => {
-                // TẠO KHUNG CHO MỘT PHIẾU (Tương đương 1 mặt A5)
                 const ticket = document.createElement('div');
-                ticket.style.flex = '1'; // Mỗi phiếu giãn đúng 50% chiều cao trang
+                ticket.style.flex = '1'; 
                 ticket.style.padding = '40px';
                 ticket.style.boxSizing = 'border-box';
                 
-                // Thêm đường kẻ ngang nét đứt ở giữa để cắt (nếu trang đó có 2 phiếu)
                 if (itemIndex === 0 && chunk.length > 1) {
                     ticket.style.borderBottom = '1px dashed #ccc';
                 }
