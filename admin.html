@@ -311,45 +311,18 @@
     function drawRow(item, tbody) {
         const tr = document.createElement('tr');
         
-        // 4. Tính toán số ngày gửi trễ (Hạn mức 5 ngày)
-    function isLateSubmission(id, dateStr) {
-        const submitDate = new Date(getSubmitTimeMs(id));
-        submitDate.setHours(0,0,0,0); 
-        
-        // Chuyển đổi dateStr (YYYY-MM-DD hoặc DD/MM/YYYY) sang Date object
-        let absentDate;
-        if (dateStr.includes('-')) {
-            const p = dateStr.split('-');
-            absentDate = new Date(p[0], p[1] - 1, p[2]);
-        } else {
-            const p = dateStr.split('/');
-            absentDate = new Date(p[2], p[1] - 1, p[0]);
-        }
-        absentDate.setHours(0,0,0,0);
-        
-        const diffTime = submitDate - absentDate;
-        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-        return diffDays > 5;
-    }
+        // Format lại thời gian nộp để hiển thị rõ ràng
+        const submitDateObj = new Date(getSubmitTimeMs(item.id));
+        const submitTimeStr = submitDateObj.toLocaleDateString('vi-VN') + ' ' + submitDateObj.toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'});
 
-    // 7. Vẽ từng hàng dữ liệu (Đã tối ưu hiển thị ngày tháng)
-    function drawRow(item, tbody) {
-        const tr = document.createElement('tr');
-        
-        // Định dạng ngày vắng thành dd/mm/yyyy
-        let displayDate = item.ngay;
-        if (item.ngay.includes('-')) {
-            const p = item.ngay.split('-');
-            displayDate = `${p[2]}/${p[1]}/${p[0]}`;
-        }
-
-        // Kiểm tra trễ hạn để bôi đỏ
+        // Xác định xem có bị nộp trễ không (> 5 ngày)
         const isLate = isLateSubmission(item.id, item.ngay);
         let noteHtml = "";
         
+        // Nếu trễ hạn, bôi đỏ cả hàng (áp dụng cho mọi tài khoản)
         if(isLate) {
             tr.classList.add('table-danger');
-            noteHtml = `<br><span style="font-size: 11px; color: #dc3545; font-weight: 800;">(⚠️ NỘP TRỄ HẠN)</span>`;
+            noteHtml = `<br><span style="font-size: 11px; color: #dc3545; font-weight: 800; background: #fff; padding: 2px 4px; border-radius: 4px;">⚠️ NỘP TRỄ HẠN</span>`;
         }
 
         let btnHtml = currentUserRole !== "HCNS" 
@@ -360,7 +333,8 @@
             <td>${item.name}</td>
             <td>${item.maNV}</td>
             <td>
-                <span style="font-weight: 700; font-size: 15px;">${displayDate}</span>
+                <span style="font-weight: 700; font-size: 15px;">${item.ngay}</span><br>
+                <span style="font-size: 12px; opacity: 0.8;">(Nộp lúc: ${submitTimeStr})</span>
                 ${noteHtml}
             </td>
             <td>${item.gio}</td>
