@@ -153,30 +153,44 @@
 </div>
 
 <script>
+    // DÁN LINK API CỦA BẠN VÀO ĐÂY
     const scriptURL = 'https://script.google.com/macros/s/AKfycby8-SOtuoN-oq43NXY5743zF6K5KosWao4BJZXy3AbVXLD0ZYSikVxNXwN72_Z52DA/exec';
 
     const form = document.forms['chamCongForm'];
     const submitBtn = document.getElementById('submitBtn');
 
-    // --- BIẾN TOÀN CỤC ĐỂ LƯU ẢNH ---
     let fileData = "";
     let fileMimeType = "";
 
-    // --- BẮT SỰ KIỆN KHI CHỌN ẢNH VÀ MÃ HÓA ---
+    // THUẬT TOÁN NÉN ẢNH CLIENT-SIDE (GIẢM DUNG LƯỢNG TỪ 5MB XUỐNG 100KB)
     document.getElementById('fileUpload').addEventListener('change', function(e) {
         const file = e.target.files[0];
-        if(file) {
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                const result = event.target.result;
-                fileMimeType = result.split(';')[0].split(':')[1];
-                fileData = result.split(',')[1];
-            };
-            reader.readAsDataURL(file);
-        } else {
-            fileData = "";
-            fileMimeType = "";
+        if(!file) {
+            fileData = ""; fileMimeType = ""; return;
         }
+        
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            const img = new Image();
+            img.onload = function() {
+                // Giới hạn chiều rộng ảnh còn 800px để nén dung lượng
+                const canvas = document.createElement('canvas');
+                const MAX_WIDTH = 800;
+                const scaleSize = MAX_WIDTH / img.width;
+                canvas.width = MAX_WIDTH;
+                canvas.height = img.height * scaleSize;
+
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+                // Chuyển thành JPG chất lượng 70% (Dung lượng cực nhẹ)
+                const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+                fileMimeType = 'image/jpeg';
+                fileData = dataUrl.split(',')[1];
+            }
+            img.src = event.target.result;
+        };
+        reader.readAsDataURL(file);
     });
 
     form.addEventListener('submit', e => {
@@ -185,12 +199,14 @@
         const maSo = document.getElementById('inputMaNV').value.trim();
         document.getElementById('hiddenMaNV').value = "AVH" + maSo;
 
+        // Trạng thái chờ
         submitBtn.disabled = true;
-        submitBtn.innerText = "Đang tải ảnh và gửi...";
+        submitBtn.innerText = "⏳ ĐANG GỬI VÀ TẢI ẢNH...";
+        submitBtn.style.backgroundColor = "#ffc107"; // Đổi màu cam cảnh báo
+        submitBtn.style.color = "#000";
 
         const data = new URLSearchParams(new FormData(form));
 
-        // --- ĐÍNH KÈM DỮ LIỆU ẢNH VÀO FORM ---
         if (fileData !== "") {
             data.append('fileData', fileData);
             data.append('fileMimeType', fileMimeType);
@@ -200,23 +216,34 @@
         .then(response => response.json())
         .then(data => {
             if(data.status === "success") {
-                alert("Đã gửi phiếu chấm công thành công!");
-                form.reset(); 
-                fileData = "";
-                fileMimeType = "";
+                // Đổi nút thành màu xanh báo thành công
+                submitBtn.innerText = "✅ ĐÃ GỬI THÀNH CÔNG!";
+                submitBtn.style.backgroundColor = "#28a745";
+                submitBtn.style.color = "#fff";
+                
+                // Tự động xóa sạch form để gõ đơn tiếp theo, KHÔNG RELOAD TRANG
+                setTimeout(() => {
+                    form.reset();
+                    fileData = "";
+                    fileMimeType = "";
+                    document.getElementById('fileUpload').value = ""; // Xóa tên file ảnh
+                    submitBtn.disabled = false;
+                    submitBtn.innerText = "Xác nhận gửi";
+                    submitBtn.style.backgroundColor = "#001a72";
+                }, 2000); // Trả lại form như mới sau 2 giây
             } else {
                 alert("Lỗi từ hệ thống: " + data.message);
+                submitBtn.disabled = false;
+                submitBtn.innerText = "Xác nhận gửi";
+                submitBtn.style.backgroundColor = "#001a72";
             }
-            submitBtn.disabled = false;
-            submitBtn.innerText = "Xác nhận gửi";
         })
         .catch(error => {
-            alert("Đã ghi nhận lệnh gửi! Vui lòng làm mới trang.");
-            form.reset();
-            fileData = "";
-            fileMimeType = "";
+            alert("Lỗi kết nối mạng! Vui lòng thử lại.");
             submitBtn.disabled = false;
             submitBtn.innerText = "Xác nhận gửi";
+            submitBtn.style.backgroundColor = "#001a72";
+            submitBtn.style.color = "#fff";
         });
     });
 
