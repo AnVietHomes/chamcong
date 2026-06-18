@@ -33,13 +33,11 @@
         .dashboard-container { max-width: 1200px; margin: 40px auto; background: #fff; padding: 30px 40px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); display: none; }
         .dashboard-header h3 { color: #001a72; font-weight: 800; text-transform: uppercase; font-size: 24px;}
         
-        .row-late td { 
-            background-color: #ffeaea !important; 
-            color: #c90000 !important; 
-            font-weight: 700 !important; 
-            border-bottom: 1px solid #ffcccc !important;
-        }
-        
+        /* CSS CHO CÁC ROW ĐẶC BIỆT */
+        .row-late td { background-color: #ffeaea !important; color: #c90000 !important; font-weight: 700 !important; border-bottom: 1px solid #ffcccc !important; }
+        .row-rejected td { background-color: #f0f2f5 !important; color: #6c757d !important; border-bottom: 1px solid #e9ecef !important; }
+        .row-rejected td span.badge { opacity: 0.85; }
+
         .table-secondary td { background-color: #f0f4f8 !important; color: #001a72 !important; font-weight: 800;}
         .table th { font-weight: 800; color: #001a72; }
         .table td { vertical-align: middle; font-size: 14px;}
@@ -65,11 +63,11 @@
 <div class="login-wrapper" id="loginScreen">
     <div class="login-header">
         <img src="logo.svg" alt="An Viet Homes">
-        <h2>HỆ THỐNG PHIẾU XÁC NHẬN CHẤM CÔNG</h2>
+        <h2>HỆ THỐNG QUẢN TRỊ CHẤM CÔNG</h2>
     </div>
 
     <div class="login-container">
-        <div class="login-title">TÀI KHOẢN QUẢN TRỊ NỘI BỘ</div>
+        <div class="login-title">ĐĂNG NHẬP NỘI BỘ</div>
         <form id="loginForm">
             <input type="hidden" name="action" value="login">
             <div class="mb-3">
@@ -78,7 +76,7 @@
             </div>
             <div class="mb-3">
                 <label class="form-label">Mật khẩu</label>
-                <input type="password" class="form-control" name="password" required placeholder="Nhập mật khẩu đã được cấp">
+                <input type="password" class="form-control" name="password" required placeholder="Nhập mật khẩu">
             </div>
             <button type="submit" class="btn-brand" id="btnLogin">ĐĂNG NHẬP</button>
         </form>
@@ -135,7 +133,7 @@
                 <option value="ALL">Tất cả phòng ban</option>
             </select>
             
-            <button id="btnOpenExport" class="btn btn-primary btn-sm fw-bold px-3" style="border-radius: 20px; background-color: #001a72; border:none; display:none;" onclick="openExportModal()">🖨️ Tải báo cáo PDF</button>
+            <button id="btnOpenExport" class="btn btn-primary btn-sm fw-bold px-3" style="border-radius: 20px; background-color: #001a72; border:none; display:none;" onclick="openExportModal()">🖨️ Xuất báo cáo PDF</button>
 
             <button class="btn btn-outline-danger btn-sm fw-bold px-3" style="border-radius: 20px;" onclick="logout()">Đăng xuất</button>
         </div>
@@ -175,7 +173,8 @@
 </div>
 
 <script>
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbxiSMKHNSSRaJu5w_AYq07v_a-lb3eTeo0UXNJjLF8bi8KxQ5zw3h4kIzOqmZck01ty/exec';
+    // DÁN LINK API CỦA BẠN VÀO ĐÂY
+    const scriptURL = 'YOUR_API_URL_HERE';
     
     let globalData = []; 
     let currentUserRole = ""; 
@@ -273,24 +272,18 @@
             });
     }
 
-    function getSubmitTimeMs(id) {
-        return parseInt(id.replace("PC", ""));
-    }
+    function getSubmitTimeMs(id) { return parseInt(id.replace("PC", "")); }
 
     function formatDisplayDate(dateStr) {
         if (!dateStr) return "";
-        if (dateStr.includes('T')) {
-            dateStr = dateStr.split('T')[0];
-        }
+        if (dateStr.includes('T')) dateStr = dateStr.split('T')[0];
         
         if (dateStr.includes('/')) {
             const parts = dateStr.split('/');
             return `${parts[0].padStart(2, '0')}-${parts[1].padStart(2, '0')}-${parts[2]}`; 
         } else if (dateStr.includes('-')) {
             const parts = dateStr.split('-');
-            if (parts[0].length === 4) {
-                return `${parts[2].padStart(2, '0')}-${parts[1].padStart(2, '0')}-${parts[0]}`;
-            }
+            if (parts[0].length === 4) return `${parts[2].padStart(2, '0')}-${parts[1].padStart(2, '0')}-${parts[0]}`;
             return `${parts[0].padStart(2, '0')}-${parts[1].padStart(2, '0')}-${parts[2]}`;
         }
         return dateStr;
@@ -300,9 +293,7 @@
         if (!timeStr) return "";
         if (timeStr.includes("T") || timeStr.includes("1899")) {
             const d = new Date(timeStr);
-            if (!isNaN(d.getTime())) {
-                return d.toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'});
-            }
+            if (!isNaN(d.getTime())) return d.toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'});
         }
         return timeStr;
     }
@@ -310,42 +301,32 @@
     function isLateSubmission(id, dateStr) {
         const submitDate = new Date(getSubmitTimeMs(id));
         submitDate.setHours(0,0,0,0); 
-        
         let cleanDateStr = dateStr;
         if (cleanDateStr.includes('T')) cleanDateStr = cleanDateStr.split('T')[0];
-        
         let absentDate;
         if (cleanDateStr.includes('/')) {
             const parts = cleanDateStr.split('/');
             absentDate = new Date(parts[2], parts[1] - 1, parts[0]);
         } else if (cleanDateStr.includes('-')) {
             const parts = cleanDateStr.split('-');
-            if (parts[0].length === 4) {
-                absentDate = new Date(parts[0], parts[1] - 1, parts[2]);
-            } else {
-                absentDate = new Date(parts[2], parts[1] - 1, parts[0]);
-            }
+            if (parts[0].length === 4) absentDate = new Date(parts[0], parts[1] - 1, parts[2]);
+            else absentDate = new Date(parts[2], parts[1] - 1, parts[0]);
         } else {
             absentDate = new Date(cleanDateStr); 
         }
         absentDate.setHours(0,0,0,0);
-        
         const diffTime = submitDate.getTime() - absentDate.getTime();
-        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-        
-        return diffDays > 5;
+        return Math.floor(diffTime / (1000 * 60 * 60 * 24)) > 5;
     }
 
     function populateDeptFilter(data) {
         const filter = document.getElementById('deptFilter');
         const currentSelection = filter.value;
         const depts = new Set(data.map(item => item.phongBan).filter(Boolean));
-        
         filter.innerHTML = '<option value="ALL">Tất cả phòng ban</option>';
         depts.forEach(dept => {
             const opt = document.createElement('option');
-            opt.value = dept;
-            opt.innerText = "Phòng " + dept;
+            opt.value = dept; opt.innerText = "Phòng " + dept;
             filter.appendChild(opt);
         });
         filter.value = currentSelection !== "" ? currentSelection : "ALL";
@@ -364,18 +345,14 @@
 
         if (currentUserRole === 'HCNS' || currentUserRole === 'GĐKD') {
             const selectedDept = document.getElementById('deptFilter').value;
-            if (selectedDept !== 'ALL') {
-                filteredData = filteredData.filter(item => item.phongBan === selectedDept);
-            }
+            if (selectedDept !== 'ALL') filteredData = filteredData.filter(item => item.phongBan === selectedDept);
             
             if (currentUserRole === 'HCNS') {
                 const startDateStr = document.getElementById('filterStartDate').value;
                 const endDateStr = document.getElementById('filterEndDate').value;
-                
                 if (startDateStr || endDateStr) {
                     const startMs = startDateStr ? new Date(startDateStr).setHours(0,0,0,0) : 0;
                     const endMs = endDateStr ? new Date(endDateStr).setHours(23,59,59,999) : Infinity;
-                    
                     filteredData = filteredData.filter(item => {
                         const submitMs = getSubmitTimeMs(item.id);
                         return submitMs >= startMs && submitMs <= endMs;
@@ -400,7 +377,6 @@
                 headerRow.className = 'table-secondary';
                 headerRow.innerHTML = `<td colspan="7" class="text-center">📂 DANH SÁCH PHÒNG: ${dept}</td>`;
                 tbody.appendChild(headerRow);
-                
                 items.forEach(item => drawRow(item, tbody));
             }
         } else {
@@ -410,18 +386,20 @@
 
     function drawRow(item, tbody) {
         const tr = document.createElement('tr');
-        
         const displayDate = formatDisplayDate(item.ngay);
         const displayTime = formatDisplayTime(item.gio);
         const isLate = isLateSubmission(item.id, item.ngay);
         
         let noteHtml = "";
-        if(isLate) {
+        
+        // Cập nhật màu sắc cho trạng thái Từ chối
+        if (item.trangThai === "Từ chối") {
+            tr.classList.add('row-rejected');
+        } else if (isLate) {
             tr.classList.add('row-late'); 
             noteHtml = `<br><span style="font-size: 11px; color: #fff; font-weight: 800; background: #c90000; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 5px;">⚠️ NỘP TRỄ HẠN</span>`;
         }
 
-        // TÍCH HỢP HIỂN THỊ ĐƯỜNG LINK ẢNH DRIVE CHO CÁC SẾP DUYỆT
         let linkAnhHtml = "";
         if (item.linkAnh && item.linkAnh.startsWith("http")) {
             linkAnhHtml = `<br><a href="${item.linkAnh}" target="_blank" class="badge bg-info text-dark mt-2" style="text-decoration:none; font-size: 11px; padding: 4px 8px;">🖼️ Xem ảnh</a>`;
@@ -430,9 +408,24 @@
         const submitDateObj = new Date(getSubmitTimeMs(item.id));
         const submitTimeStr = submitDateObj.toLocaleDateString('vi-VN') + ' ' + submitDateObj.toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'});
 
-        let btnHtml = currentUserRole !== "HCNS" 
-            ? `<button class="btn btn-sm btn-primary fw-bold px-3" style="border-radius: 20px; background-color: #001a72; border:none;" onclick="approveRequest('${item.id}', this)">Xác nhận</button>`
-            : `<span class="badge bg-success" style="border-radius: 20px;">Hoàn thành</span>`;
+        // HỆ THỐNG NÚT BẤM (XÁC NHẬN & TỪ CHỐI)
+        let btnHtml = "";
+        if (currentUserRole !== "HCNS") {
+            btnHtml = `
+                <div class="d-flex gap-2 flex-wrap">
+                    <button class="btn btn-sm btn-primary fw-bold px-3" style="border-radius: 20px; background-color: #001a72; border:none;" onclick="approveRequest('${item.id}', this)">Xác nhận</button>
+                    <button class="btn btn-sm btn-danger fw-bold px-3" style="border-radius: 20px;" onclick="rejectRequest('${item.id}', this)">Từ chối</button>
+                </div>
+            `;
+        } else {
+            if (item.trangThai === "Từ chối") {
+                btnHtml = `<span class="badge bg-secondary" style="border-radius: 20px;">Đã từ chối</span>`;
+            } else {
+                btnHtml = `<span class="badge bg-success" style="border-radius: 20px;">Hoàn thành</span>`;
+            }
+        }
+
+        let statusBadge = item.trangThai === "Từ chối" ? `<span class="badge bg-danger" style="border-radius: 20px;">Từ chối</span>` : `<span class="badge bg-warning text-dark" style="border-radius: 20px;">${item.trangThai}</span>`;
 
         tr.innerHTML = `
             <td>${item.name}</td>
@@ -443,22 +436,20 @@
                 ${noteHtml}
             </td>
             <td><span style="font-weight: 700;">${displayTime}</span></td>
-            <td>
-                ${item.lyDo}
-                ${linkAnhHtml}
-            </td>
-            <td><span class="badge bg-warning text-dark" style="border-radius: 20px;">${item.trangThai}</span></td>
+            <td>${item.lyDo} ${linkAnhHtml}</td>
+            <td>${statusBadge}</td>
             <td>${btnHtml}</td>
         `;
         tbody.appendChild(tr);
     }
 
     function approveRequest(id, btnElement) {
-        if(!confirm("Bạn chắc chắn muốn duyệt phiếu này?")) return;
+        if(!confirm("Bạn chắc chắn muốn DUYỆT phiếu này?")) return;
         
         const tr = btnElement.closest('tr');
         tr.style.opacity = '0.4';
-        btnElement.disabled = true;
+        const buttons = tr.querySelectorAll('button');
+        buttons.forEach(b => b.disabled = true);
         btnElement.innerText = 'Đang xử lý...';
         
         const user = JSON.parse(localStorage.getItem('user'));
@@ -480,10 +471,38 @@
                     alert("Có lỗi từ máy chủ. Vui lòng thử lại!");
                     window.location.reload();
                 }
-            }).catch(err => {
-                alert("Lỗi kết nối mạng, thao tác chưa được ghi nhận!");
-                window.location.reload();
-            });
+            }).catch(err => { alert("Lỗi mạng!"); window.location.reload(); });
+    }
+
+    function rejectRequest(id, btnElement) {
+        if(!confirm("Bạn chắc chắn muốn TỪ CHỐI phiếu này?")) return;
+        
+        const tr = btnElement.closest('tr');
+        tr.style.opacity = '0.4';
+        const buttons = tr.querySelectorAll('button');
+        buttons.forEach(b => b.disabled = true);
+        btnElement.innerText = 'Đang hủy...';
+        
+        const user = JSON.parse(localStorage.getItem('user'));
+        const signName = user.role === 'ADMIN' ? `${user.name} (Quản trị viên)` : user.name;
+
+        const formData = new FormData();
+        formData.append('action', 'reject');
+        formData.append('id', id);
+        formData.append('role', currentUserRole); 
+        formData.append('name', signName);
+
+        fetch(scriptURL, { method: 'POST', body: new URLSearchParams(formData) })
+            .then(res => res.json())
+            .then(data => {
+                if(data.status === "success") {
+                    globalData = globalData.filter(item => item.id !== id);
+                    tr.remove(); 
+                } else {
+                    alert("Có lỗi từ máy chủ. Vui lòng thử lại!");
+                    window.location.reload();
+                }
+            }).catch(err => { alert("Lỗi mạng!"); window.location.reload(); });
     }
 
     function logout() {
@@ -491,15 +510,12 @@
         window.location.reload();
     }
 
-    window.onload = function() {
-        if(localStorage.getItem('user')) showDashboard();
-    };
+    window.onload = function() { if(localStorage.getItem('user')) showDashboard(); };
 
     /* ================= CÁC HÀM XUẤT PDF ================= */
     function getMonthYear(dateStr) {
         let cleanDate = dateStr;
         if (cleanDate.includes('T')) cleanDate = cleanDate.split('T')[0];
-
         if (!cleanDate) return "Khác";
         if (cleanDate.includes('-')) {
             const parts = cleanDate.split('-');
@@ -519,13 +535,16 @@
         
         const monthCounts = {};
         globalData.forEach(item => {
-            const my = getMonthYear(item.ngay);
-            if (!monthCounts[my]) monthCounts[my] = 0;
-            monthCounts[my]++;
+            // Không xuất PDF các đơn đã bị từ chối
+            if(item.trangThai !== "Từ chối") {
+                const my = getMonthYear(item.ngay);
+                if (!monthCounts[my]) monthCounts[my] = 0;
+                monthCounts[my]++;
+            }
         });
 
         if (Object.keys(monthCounts).length === 0) {
-            select.innerHTML = '<option value="">Không có dữ liệu</option>';
+            select.innerHTML = '<option value="">Không có dữ liệu hợp lệ</option>';
         } else {
             for (const [my, count] of Object.entries(monthCounts)) {
                 if(my !== "Khác") {
@@ -539,22 +558,18 @@
         document.getElementById('exportModal').style.display = 'flex';
     }
 
-    function closeExportModal() {
-        document.getElementById('exportModal').style.display = 'none';
-    }
+    function closeExportModal() { document.getElementById('exportModal').style.display = 'none'; }
 
     function generatePDF() {
         const selectedMonth = document.getElementById('monthSelect').value;
-        if(!selectedMonth) {
-            alert("Vui lòng chọn tháng cần xuất!");
-            return;
-        }
+        if(!selectedMonth) { alert("Vui lòng chọn tháng cần xuất!"); return; }
 
         const btn = document.getElementById('btnDownloadPDF');
         btn.innerText = "ĐANG TẠO PDF, VUI LÒNG CHỜ...";
         btn.disabled = true;
 
-        const dataToExport = globalData.filter(item => getMonthYear(item.ngay) === selectedMonth);
+        // Chỉ lấy những đơn thuộc tháng đó và KHÔNG PHẢI đơn Từ chối
+        const dataToExport = globalData.filter(item => getMonthYear(item.ngay) === selectedMonth && item.trangThai !== "Từ chối");
 
         const container = document.createElement('div');
         container.style.width = '800px'; 
