@@ -154,7 +154,7 @@
 
 <script>
     // DÁN LINK API CỦA BẠN VÀO ĐÂY
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbxiSMKHNSSRaJu5w_AYq07v_a-lb3eTeo0UXNJjLF8bi8KxQ5zw3h4kIzOqmZck01ty/exec';
+    const scriptURL = 'YOUR_API_URL_HERE';
 
     const form = document.forms['chamCongForm'];
     const submitBtn = document.getElementById('submitBtn');
@@ -162,7 +162,7 @@
     let fileData = "";
     let fileMimeType = "";
 
-    // 1. CHỌN VÀ NÉN ẢNH
+    // 1. CHỌN VÀ NÉN ẢNH CLIENT-SIDE
     document.getElementById('fileUpload').addEventListener('change', function(e) {
         const file = e.target.files[0];
         if(!file) {
@@ -174,7 +174,7 @@
             const img = new Image();
             img.onload = function() {
                 const canvas = document.createElement('canvas');
-                const MAX_WIDTH = 800; // Nén ảnh để gửi siêu tốc
+                const MAX_WIDTH = 800; // Chiều rộng tối đa để nén
                 const scaleSize = MAX_WIDTH / img.width;
                 canvas.width = MAX_WIDTH;
                 canvas.height = img.height * scaleSize;
@@ -182,6 +182,7 @@
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
+                // Ép sang định dạng JPEG với chất lượng 70%
                 const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
                 fileMimeType = 'image/jpeg';
                 fileData = dataUrl.split(',')[1];
@@ -191,7 +192,7 @@
         reader.readAsDataURL(file);
     });
 
-    // 2. XỬ LÝ GỬI ĐƠN VỚI GIAO THỨC TRUYỀN FILE CHUẨN
+    // 2. XỬ LÝ GỬI ĐƠN KHÔNG RELOAD
     form.addEventListener('submit', e => {
         e.preventDefault();
         
@@ -200,10 +201,10 @@
 
         submitBtn.disabled = true;
         submitBtn.innerText = "⏳ Đang tải ảnh và gửi đơn...";
+        submitBtn.style.backgroundColor = "#ffc107";
+        submitBtn.style.color = "#000";
 
-        // SỬ DỤNG FORMDATA NGUYÊN BẢN ĐỂ KHÔNG BỊ TRÀN ẢNH
         const formData = new FormData(form);
-        formData.append('action', 'submitForm');
 
         if (fileData !== "") {
             formData.append('fileData', fileData);
@@ -214,27 +215,37 @@
         .then(response => response.json())
         .then(data => {
             if(data.status === "success") {
-                alert("Đã gửi phiếu chấm công và tải ảnh thành công!");
-                form.reset(); 
-                fileData = "";
-                fileMimeType = "";
+                submitBtn.innerText = "✅ ĐÃ GỬI THÀNH CÔNG!";
+                submitBtn.style.backgroundColor = "#28a745";
+                submitBtn.style.color = "#fff";
+                
+                setTimeout(() => {
+                    form.reset();
+                    fileData = "";
+                    fileMimeType = "";
+                    document.getElementById('fileUpload').value = ""; 
+                    submitBtn.disabled = false;
+                    submitBtn.innerText = "Xác nhận gửi";
+                    submitBtn.style.backgroundColor = "#001a72";
+                }, 2000); 
             } else {
                 alert("Lỗi từ hệ thống: " + data.message);
+                submitBtn.disabled = false;
+                submitBtn.innerText = "Xác nhận gửi";
+                submitBtn.style.backgroundColor = "#001a72";
+                submitBtn.style.color = "#fff";
             }
-            submitBtn.disabled = false;
-            submitBtn.innerText = "Xác nhận gửi";
         })
         .catch(error => {
-            alert("Đã ghi nhận lệnh gửi! Vui lòng làm mới trang.");
-            form.reset();
-            fileData = "";
-            fileMimeType = "";
+            alert("Lỗi mạng! Thao tác có thể chưa được ghi nhận.");
             submitBtn.disabled = false;
             submitBtn.innerText = "Xác nhận gửi";
+            submitBtn.style.backgroundColor = "#001a72";
+            submitBtn.style.color = "#fff";
         });
     });
 
-    // 3. CÁC HÀM TRA CỨU GIỮ NGUYÊN (ĐÃ FIX LỖI FORMDATA)
+    // 3. CÁC HÀM TRA CỨU TÍCH HỢP TRẠNG THÁI "TỪ CHỐI"
     function openModal() { document.getElementById('searchModal').style.display = 'flex'; }
     function closeModal() { 
         document.getElementById('searchModal').style.display = 'none'; 
@@ -263,7 +274,10 @@
                 if(data.status === "success" && data.data.length > 0) {
                     let html = '<ul class="list-group mt-3">';
                     data.data.forEach(item => {
-                        let badgeColor = item.trangThai === "Đã hoàn thành" ? "bg-success" : "bg-warning text-dark";
+                        let badgeColor = "bg-warning text-dark"; // Chờ duyệt
+                        if (item.trangThai === "Đã hoàn thành") badgeColor = "bg-success"; // Hoàn thành
+                        else if (item.trangThai === "Từ chối") badgeColor = "bg-danger"; // Bị từ chối
+
                         html += `
                             <li class="list-group-item d-flex justify-content-between align-items-center">
                                 <div>
