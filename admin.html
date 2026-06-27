@@ -717,6 +717,7 @@
             return;
         }
 
+        // FIX LỖI 2: THUẬT TOÁN VẼ LẦN LƯỢT TỪNG TRANG ĐỂ TRÁNH TRÀN BỘ NHỚ CANAVAS
        // ... (Giữ nguyên phần khởi tạo container, chunks và logic tạo nội dung bên trên) ...
 
         // THAY THẾ ĐOẠN VÒNG LẶP CŨ BẰNG CÁCH NÀY ĐỂ TRÁNH TRANG TRẮNG
@@ -804,16 +805,6 @@
             btn.disabled = false;
             document.body.removeChild(wrapper);
             closeExportModal();
-        });
-            btn.innerText = "⬇️ TẢI XUỐNG NGAY";
-            btn.disabled = false;
-            document.body.removeChild(wrapper); // Xóa khung ẩn để dọn dẹp RAM
-            closeExportModal();
-        }).catch(err => {
-            alert("Có lỗi xảy ra khi tạo PDF. Vui lòng thử lại.");
-            btn.innerText = "⬇️ TẢI XUỐNG NGAY";
-            btn.disabled = false;
-            document.body.removeChild(wrapper);
         });
     }
 </script>
