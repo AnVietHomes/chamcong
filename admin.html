@@ -616,28 +616,29 @@
 
         const dataToExport = globalData.filter(item => getMonthYear(item.ngay) === selectedMonth && item.trangThai !== "Từ chối" && item.trangThai !== "HCNS Trả lại");
 
-        const container = document.createElement('div');
-        container.style.width = '800px'; 
-        container.style.fontFamily = 'Manrope, sans-serif';
-        container.style.color = '#111';
+        // FIX LỖI 1: TẠO KHUNG ẨN GẮN TRỰC TIẾP VÀO TRANG ĐỂ TRÌNH DUYỆT ĐỌC ĐƯỢC
+        const wrapper = document.createElement('div');
+        wrapper.style.position = 'absolute';
+        wrapper.style.left = '-9999px';
+        wrapper.style.top = '0';
+        document.body.appendChild(wrapper);
 
         const chunks = [];
         for (let i = 0; i < dataToExport.length; i += 2) {
             chunks.push(dataToExport.slice(i, i + 2));
         }
 
+        // TẠO CẤU TRÚC TỪNG TRANG RIÊNG BIỆT
         chunks.forEach((chunk, index) => {
             const page = document.createElement('div');
-            page.style.width = '100%';
-            page.style.height = '1131px'; 
+            page.style.width = '800px'; 
+            page.style.height = '1131px'; // Kích thước A4 dọc chuẩn
             page.style.backgroundColor = '#fff';
             page.style.display = 'flex';
             page.style.flexDirection = 'column';
+            page.style.fontFamily = 'Manrope, sans-serif';
+            page.style.color = '#111';
             
-            if (index < chunks.length - 1) {
-                page.style.pageBreakAfter = 'always';
-            }
-
             chunk.forEach((item, itemIndex) => {
                 const ticket = document.createElement('div');
                 ticket.style.flex = '1'; 
@@ -696,7 +697,7 @@
                 page.appendChild(ticket);
             });
 
-            container.appendChild(page);
+            wrapper.appendChild(page);
         });
 
         const opt = {
@@ -707,10 +708,34 @@
             jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
         };
 
-        html2pdf().set(opt).from(container).save().then(() => {
+        const pages = wrapper.children;
+        if(pages.length === 0) {
+            alert("Không có dữ liệu để xuất!");
             btn.innerText = "⬇️ TẢI XUỐNG NGAY";
             btn.disabled = false;
+            document.body.removeChild(wrapper);
+            return;
+        }
+
+        // FIX LỖI 2: THUẬT TOÁN VẼ LẦN LƯỢT TỪNG TRANG ĐỂ TRÁNH TRÀN BỘ NHỚ CANAVAS
+        let worker = html2pdf().set(opt).from(pages[0]).toPdf();
+
+        for (let i = 1; i < pages.length; i++) {
+            worker = worker.get('pdf').then(pdf => {
+                pdf.addPage();
+            }).from(pages[i]).toContainer().toCanvas().toPdf();
+        }
+
+        worker.save().then(() => {
+            btn.innerText = "⬇️ TẢI XUỐNG NGAY";
+            btn.disabled = false;
+            document.body.removeChild(wrapper); // Xóa khung ẩn để dọn dẹp RAM
             closeExportModal();
+        }).catch(err => {
+            alert("Có lỗi xảy ra khi tạo PDF. Vui lòng thử lại.");
+            btn.innerText = "⬇️ TẢI XUỐNG NGAY";
+            btn.disabled = false;
+            document.body.removeChild(wrapper);
         });
     }
 </script>
