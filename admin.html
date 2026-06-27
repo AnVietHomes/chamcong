@@ -101,11 +101,10 @@
                 <select id="adminRoleSelect" class="form-select form-select-sm admin-select" onchange="switchAdminRole()">
                     <option value="HCNS|ALL">Màn hình Hành chính nhân sự</option>
                     <optgroup label="Mô phỏng Giám đốc khối">
+                        <option value="GĐKD kiêm TPKD|AV1, AV2">Sếp kiêm nhiệm (VD: GĐKD kiêm TPKD AV1, AV2)</option>
                         <option value="GĐKD|AV1, AV2, AV3">GĐKD - Khối 1 (VD: AV1, AV2, AV3)</option>
                         <option value="GĐKD|AV5, AV6, AV8, AV9">GĐKD - Khối 2 (VD: AV5, AV6, AV8, AV9)</option>
-                        <option value="GĐKD|AV11, AV12, AV18, AV19, AV89">GĐKD - Khối 3 (VD: AV11, AV12...)</option>
-                        <option value="GĐKD kiêm TPKD|AV1, AV2">Sếp kiêm nhiệm (VD: GĐKD kiêm TPKD AV1, AV2)</option>
-    <option value="GĐKD|AV1, AV2, AV3">GĐKD - Khối 1 (VD: AV1, AV2, AV3)</option>
+                        <option value="GĐKD|AV11, AV12, AV16, AV19, AV89">GĐKD - Khối 3 (VD: AV11, AV12...)</option>
                     </optgroup>
                     <optgroup label="Màn hình Trưởng phòng">
                         <option value="TPKD|AV1">TPKD - Phòng AV1</option>
@@ -117,7 +116,7 @@
                         <option value="TPKD|AV9">TPKD - Phòng AV9</option>
                         <option value="TPKD|AV11">TPKD - Phòng AV11</option>
                         <option value="TPKD|AV12">TPKD - Phòng AV12</option>
-                        <option value="TPKD|AV18">TPKD - Phòng AV18</option>
+                        <option value="TPKD|AV16">TPKD - Phòng AV16</option>
                         <option value="TPKD|AV19">TPKD - Phòng AV19</option>
                         <option value="TPKD|AV89">TPKD - Phòng AV89</option>
                     </optgroup>
@@ -176,7 +175,7 @@
 
 <script>
     // DÁN LINK API CỦA BẠN VÀO ĐÂY
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbxiSMKHNSSRaJu5w_AYq07v_a-lb3eTeo0UXNJjLF8bi8KxQ5zw3h4kIzOqmZck01ty/exec';
+    const scriptURL = 'YOUR_API_URL_HERE';
     
     let globalData = []; 
     let currentUserRole = ""; 
@@ -394,8 +393,8 @@
         
         let noteHtml = "";
         
-        // Cập nhật màu sắc cho trạng thái Từ chối
-        if (item.trangThai === "Từ chối") {
+        // Màu sắc dòng dành cho các phiếu bị từ chối / trả lại
+        if (item.trangThai === "Từ chối" || item.trangThai === "HCNS Trả lại") {
             tr.classList.add('row-rejected');
         } else if (isLate) {
             tr.classList.add('row-late'); 
@@ -410,7 +409,7 @@
         const submitDateObj = new Date(getSubmitTimeMs(item.id));
         const submitTimeStr = submitDateObj.toLocaleDateString('vi-VN') + ' ' + submitDateObj.toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'});
 
-        // HỆ THỐNG NÚT BẤM (XÁC NHẬN & TỪ CHỐI)
+        // HIỂN THỊ NÚT CHO TỪNG QUYỀN
         let btnHtml = "";
         if (currentUserRole !== "HCNS") {
             btnHtml = `
@@ -420,14 +419,25 @@
                 </div>
             `;
         } else {
-            if (item.trangThai === "Từ chối") {
-                btnHtml = `<span class="badge bg-secondary" style="border-radius: 20px;">Đã từ chối</span>`;
+            // MÀN HÌNH HCNS CÓ THÊM NÚT "TRẢ LẠI ĐƠN"
+            if (item.trangThai === "Từ chối" || item.trangThai === "HCNS Trả lại") {
+                btnHtml = `<span class="badge bg-secondary" style="border-radius: 20px;">${item.trangThai}</span>`;
+            } else if (item.trangThai === "Đã hoàn thành") {
+                btnHtml = `
+                    <div class="d-flex gap-2 flex-wrap">
+                        <span class="badge bg-success" style="border-radius: 20px; display: flex; align-items: center;">Hoàn thành</span>
+                        <button class="btn btn-sm btn-outline-danger fw-bold px-2" style="border-radius: 20px; font-size: 11px;" onclick="returnRequest('${item.id}', this)">Trả lại đơn</button>
+                    </div>
+                `;
             } else {
-                btnHtml = `<span class="badge bg-success" style="border-radius: 20px;">Hoàn thành</span>`;
+                btnHtml = `<span class="badge bg-success" style="border-radius: 20px;">${item.trangThai}</span>`;
             }
         }
 
-        let statusBadge = item.trangThai === "Từ chối" ? `<span class="badge bg-danger" style="border-radius: 20px;">Từ chối</span>` : `<span class="badge bg-warning text-dark" style="border-radius: 20px;">${item.trangThai}</span>`;
+        let statusBadge = "";
+        if (item.trangThai === "Từ chối") statusBadge = `<span class="badge bg-danger" style="border-radius: 20px;">Từ chối</span>`;
+        else if (item.trangThai === "HCNS Trả lại") statusBadge = `<span class="badge bg-secondary" style="border-radius: 20px;">HCNS Trả lại</span>`;
+        else statusBadge = `<span class="badge bg-warning text-dark" style="border-radius: 20px;">${item.trangThai}</span>`;
 
         tr.innerHTML = `
             <td>${item.name}</td>
@@ -439,8 +449,8 @@
             </td>
             <td><span style="font-weight: 700;">${displayTime}</span></td>
             <td>${item.lyDo} ${linkAnhHtml}</td>
-            <td>${statusBadge}</td>
-            <td>${btnHtml}</td>
+            <td class="status-col">${statusBadge}</td>
+            <td class="action-col">${btnHtml}</td>
         `;
         tbody.appendChild(tr);
     }
@@ -507,6 +517,40 @@
             }).catch(err => { alert("Lỗi mạng!"); window.location.reload(); });
     }
 
+    // HÀM MỚI: HCNS TRẢ LẠI ĐƠN
+    function returnRequest(id, btnElement) {
+        if(!confirm("Hành động này sẽ thay đổi trạng thái của đơn thành Trả lại. Bạn có chắc chắn?")) return;
+        
+        const tr = btnElement.closest('tr');
+        tr.style.opacity = '0.4';
+        const buttons = tr.querySelectorAll('button');
+        buttons.forEach(b => b.disabled = true);
+        btnElement.innerText = 'Đang xử lý...';
+        
+        const user = JSON.parse(localStorage.getItem('user'));
+        const signName = user.role === 'ADMIN' ? `${user.name} (Quản trị viên)` : user.name;
+
+        const formData = new FormData();
+        formData.append('action', 'returnReq');
+        formData.append('id', id);
+        formData.append('role', currentUserRole); 
+        formData.append('name', signName);
+
+        fetch(scriptURL, { method: 'POST', body: new URLSearchParams(formData) })
+            .then(res => res.json())
+            .then(data => {
+                if(data.status === "success") {
+                    tr.classList.add('row-rejected');
+                    tr.querySelector('.status-col').innerHTML = `<span class="badge bg-secondary" style="border-radius: 20px;">HCNS Trả lại</span>`;
+                    tr.querySelector('.action-col').innerHTML = `<span class="badge bg-secondary" style="border-radius: 20px;">HCNS Trả lại</span>`;
+                    tr.style.opacity = '1';
+                } else {
+                    alert("Có lỗi từ máy chủ. Vui lòng thử lại!");
+                    window.location.reload();
+                }
+            }).catch(err => { alert("Lỗi mạng!"); window.location.reload(); });
+    }
+
     function logout() {
         localStorage.removeItem('user');
         window.location.reload();
@@ -537,8 +581,8 @@
         
         const monthCounts = {};
         globalData.forEach(item => {
-            // Không xuất PDF các đơn đã bị từ chối
-            if(item.trangThai !== "Từ chối") {
+            // Không xuất PDF các đơn đã bị Từ chối hoặc Trả lại
+            if(item.trangThai !== "Từ chối" && item.trangThai !== "HCNS Trả lại") {
                 const my = getMonthYear(item.ngay);
                 if (!monthCounts[my]) monthCounts[my] = 0;
                 monthCounts[my]++;
@@ -570,8 +614,7 @@
         btn.innerText = "ĐANG TẠO PDF, VUI LÒNG CHỜ...";
         btn.disabled = true;
 
-        // Chỉ lấy những đơn thuộc tháng đó và KHÔNG PHẢI đơn Từ chối
-        const dataToExport = globalData.filter(item => getMonthYear(item.ngay) === selectedMonth && item.trangThai !== "Từ chối");
+        const dataToExport = globalData.filter(item => getMonthYear(item.ngay) === selectedMonth && item.trangThai !== "Từ chối" && item.trangThai !== "HCNS Trả lại");
 
         const container = document.createElement('div');
         container.style.width = '800px'; 
