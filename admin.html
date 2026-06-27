@@ -718,93 +718,24 @@
         }
 
         // FIX LỖI 2: THUẬT TOÁN VẼ LẦN LƯỢT TỪNG TRANG ĐỂ TRÁNH TRÀN BỘ NHỚ CANAVAS
-       // ... (Giữ nguyên phần khởi tạo container, chunks và logic tạo nội dung bên trên) ...
+        let worker = html2pdf().set(opt).from(pages[0]).toPdf();
 
-        // THAY THẾ ĐOẠN VÒNG LẶP CŨ BẰNG CÁCH NÀY ĐỂ TRÁNH TRANG TRẮNG
-        chunks.forEach((chunk, index) => {
-            const page = document.createElement('div');
-            page.style.width = '800px'; 
-            page.style.height = '1131px'; 
-            page.style.backgroundColor = '#fff';
-            page.style.display = 'flex';
-            page.style.flexDirection = 'column';
-            // Không dùng pageBreakAfter ở đây nữa để tránh tạo trang thừa
-            
-            chunk.forEach((item, itemIndex) => {
-                const ticket = document.createElement('div');
-                ticket.style.flex = '1'; 
-                ticket.style.padding = '40px';
-                ticket.style.boxSizing = 'border-box';
-                
-                if (itemIndex === 0 && chunk.length > 1) {
-                    ticket.style.borderBottom = '1px dashed #ccc';
-                }
+        for (let i = 1; i < pages.length; i++) {
+            worker = worker.get('pdf').then(pdf => {
+                pdf.addPage();
+            }).from(pages[i]).toContainer().toCanvas().toPdf();
+        }
 
-                const displayDate = formatDisplayDate(item.ngay);
-                const displayTime = formatDisplayTime(item.gio);
-
-                ticket.innerHTML = `
-                    <div style="text-align: center; margin-bottom: 25px; border-bottom: 2px solid #001a72; padding-bottom: 15px;">
-                        <h4 style="color: #333; margin: 0; font-size: 15px;">CÔNG TY CỔ PHẦN PHÁT TRIỂN DỊCH VỤ VÀ ĐỊA ỐC AN VIỆT HOMES</h4>
-                        <h2 style="color: #001a72; margin: 10px 0 0 0; font-size: 22px; font-weight: 800;">PHIẾU XÁC NHẬN CHẤM CÔNG</h2>
-                    </div>
-                    
-                    <table style="width: 100%; font-size: 15px; line-height: 2.2; border-collapse: collapse;">
-                        <tr>
-                            <td style="width: 40%; font-weight: 600;">1. Họ và tên:</td>
-                            <td style="border-bottom: 1px dotted #ccc;">${item.name}</td>
-                        </tr>
-                        <tr>
-                            <td style="font-weight: 600;">2. Mã nhân viên:</td>
-                            <td style="border-bottom: 1px dotted #ccc;">${item.maNV}</td>
-                        </tr>
-                        <tr>
-                            <td style="font-weight: 600;">3. Phòng ban:</td>
-                            <td style="border-bottom: 1px dotted #ccc;">${item.phongBan}</td>
-                        </tr>
-                        <tr>
-                            <td style="font-weight: 600;">4. Ngày phát sinh:</td>
-                            <td style="border-bottom: 1px dotted #ccc;">${displayDate}</td>
-                        </tr>
-                        <tr>
-                            <td style="font-weight: 600;">5. Giờ check in/check out:</td>
-                            <td style="border-bottom: 1px dotted #ccc;">${displayTime}</td>
-                        </tr>
-                        <tr>
-                            <td style="font-weight: 600;">6. Lý do:</td>
-                            <td style="border-bottom: 1px dotted #ccc;">${item.lyDo}</td>
-                        </tr>
-                        <tr>
-                            <td style="font-weight: 600;">7. Trạng thái phiếu:</td>
-                            <td style="border-bottom: 1px dotted #ccc; font-weight: bold; color: #001a72;">${item.trangThai}</td>
-                        </tr>
-                    </table>
-
-                    <div style="margin-top: 30px; text-align: right;">
-                        <p style="margin: 0; font-style: italic; font-size: 13px;">In ngày: ${new Date().toLocaleDateString('vi-VN')}</p>
-                        <p style="margin: 5px 0 0 0; font-weight: 600; font-size: 14px;">Chữ ký số nội bộ (Hệ thống AVH)</p>
-                    </div>
-                `;
-                page.appendChild(ticket);
-            });
-
-            wrapper.appendChild(page);
-        });
-
-        const opt = {
-            margin:       0,
-            filename:     `PhieuChamCong_Thang_${selectedMonth.replace('/','_')}.pdf`,
-            image:        { type: 'jpeg', quality: 0.98 },
-            html2canvas:  { scale: 2, useCORS: true },
-            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-        };
-
-        // DÙNG CÁCH NÀY ĐỂ THƯ VIỆN TỰ DÀN TRANG MỘT CÁCH THÔNG MINH NHẤT
-        html2pdf().set(opt).from(wrapper).save().then(() => {
+        worker.save().then(() => {
+            btn.innerText = "⬇️ TẢI XUỐNG NGAY";
+            btn.disabled = false;
+            document.body.removeChild(wrapper); // Xóa khung ẩn để dọn dẹp RAM
+            closeExportModal();
+        }).catch(err => {
+            alert("Có lỗi xảy ra khi tạo PDF. Vui lòng thử lại.");
             btn.innerText = "⬇️ TẢI XUỐNG NGAY";
             btn.disabled = false;
             document.body.removeChild(wrapper);
-            closeExportModal();
         });
     }
 </script>
