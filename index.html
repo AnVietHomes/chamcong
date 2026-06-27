@@ -90,7 +90,7 @@
                         <option value="AV9">AV9</option>
                         <option value="AV11">AV11</option>
                         <option value="AV12">AV12</option>
-                        <option value="AV18">AV18</option>
+                        <option value="AV16">AV16</option>
                         <option value="AV19">AV19</option>
                         <option value="AV89">AV89</option>
                     </select>
@@ -132,6 +132,16 @@
     </div>
 </div>
 
+<!-- POPUP THÔNG BÁO TÙY CHỈNH -->
+<div class="modal-overlay" id="customAlertModal">
+    <div class="modal-box text-center" style="width: 420px; padding: 40px 30px;">
+        <span class="close-btn" onclick="closeCustomAlert()">&times;</span>
+        <div id="customAlertTitle" style="font-size: 20px; font-weight: 800; margin-bottom: 15px; text-transform: uppercase;"></div>
+        <div id="customAlertMessage" style="font-size: 15px; font-weight: 600; line-height: 1.5; margin-bottom: 25px;"></div>
+        <button class="btn-submit" onclick="closeCustomAlert()" style="margin-top: 0; padding: 10px 40px; border-radius: 30px; display: inline-block;">Đã hiểu</button>
+    </div>
+</div>
+
 <div class="modal-overlay" id="searchModal">
     <div class="modal-box">
         <span class="close-btn" onclick="closeModal()">&times;</span>
@@ -154,13 +164,30 @@
 
 <script>
     // DÁN LINK API CỦA BẠN VÀO ĐÂY
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbxiSMKHNSSRaJu5w_AYq07v_a-lb3eTeo0UXNJjLF8bi8KxQ5zw3h4kIzOqmZck01ty/exec';
+    const scriptURL = 'YOUR_API_URL_HERE';
 
     const form = document.forms['chamCongForm'];
     const submitBtn = document.getElementById('submitBtn');
 
     let fileData = "";
     let fileMimeType = "";
+
+    // HÀM HIỂN THỊ POPUP THÔNG BÁO
+    function showCustomAlert(title, msg, color) {
+        document.getElementById('customAlertTitle').innerText = title;
+        document.getElementById('customAlertTitle').style.color = color;
+        document.getElementById('customAlertMessage').innerText = msg;
+        if (color === "#c90000") {
+            document.getElementById('customAlertMessage').style.color = "#c90000";
+        } else {
+            document.getElementById('customAlertMessage').style.color = "#333";
+        }
+        document.getElementById('customAlertModal').style.display = 'flex';
+    }
+
+    function closeCustomAlert() {
+        document.getElementById('customAlertModal').style.display = 'none';
+    }
 
     // 1. CHỌN VÀ NÉN ẢNH CLIENT-SIDE
     document.getElementById('fileUpload').addEventListener('change', function(e) {
@@ -192,10 +219,33 @@
         reader.readAsDataURL(file);
     });
 
-    // 2. XỬ LÝ GỬI ĐƠN KHÔNG RELOAD
+    // 2. XỬ LÝ GỬI ĐƠN VÀ KIỂM TRA ĐIỀU KIỆN
     form.addEventListener('submit', e => {
         e.preventDefault();
         
+        // KIỂM TRA THỜI HẠN NỘP (BLOCK & WARNING)
+        const ngayInput = document.querySelector('input[name="ngay"]').value;
+        const selDate = new Date(ngayInput);
+        selDate.setHours(0,0,0,0);
+        const now = new Date();
+        const todayDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+        // Tính tổng số tháng để so sánh khác biệt tháng
+        const selMonths = selDate.getFullYear() * 12 + selDate.getMonth();
+        const nowMonths = now.getFullYear() * 12 + now.getMonth();
+
+        // ĐIỀU KIỆN 1 (HARD BLOCK): Nộp cho tháng trước mà đã qua ngày mùng 3 của tháng hiện tại
+        if (selMonths < nowMonths && now.getDate() > 3) {
+            showCustomAlert("❌ YÊU CẦU BỊ TỪ CHỐI", "Đã quá hạn nộp phiếu chấm công bổ sung, yêu cầu của bạn không thể thực hiện được.", "#c90000");
+            return; 
+        }
+
+        // ĐIỀU KIỆN 2 (SOFT WARNING): Nộp trễ quá 5 ngày
+        const diffTime = todayDate.getTime() - selDate.getTime();
+        const diffDays = Math.floor(diffTime / (1000 * 3600 * 24));
+        const isLate = diffDays > 5;
+
+        // TIẾN HÀNH GỬI
         const maSo = document.getElementById('inputMaNV').value.trim();
         document.getElementById('hiddenMaNV').value = "AVH" + maSo;
 
@@ -219,6 +269,13 @@
                 submitBtn.style.backgroundColor = "#28a745";
                 submitBtn.style.color = "#fff";
                 
+                // HIỂN THỊ THÔNG BÁO TƯƠNG ỨNG SAU KHI THÀNH CÔNG
+                if(isLate) {
+                    showCustomAlert("⚠️ CHÚ Ý: NỘP TRỄ HẠN", "Nộp phiếu thành công, nhưng do đã quá thời hạn 5 ngày theo quy định nên phiếu của bạn có thể bị HCNS trả lại hoặc không phê duyệt.", "#c90000");
+                } else {
+                    showCustomAlert("✅ THÀNH CÔNG", "Đã gửi phiếu chấm công và tải ảnh thành công!", "#28a745");
+                }
+
                 setTimeout(() => {
                     form.reset();
                     fileData = "";
@@ -245,7 +302,7 @@
         });
     });
 
-    // 3. CÁC HÀM TRA CỨU TÍCH HỢP TRẠNG THÁI "TỪ CHỐI"
+    // 3. CÁC HÀM TRA CỨU
     function openModal() { document.getElementById('searchModal').style.display = 'flex'; }
     function closeModal() { 
         document.getElementById('searchModal').style.display = 'none'; 
@@ -276,7 +333,7 @@
                     data.data.forEach(item => {
                         let badgeColor = "bg-warning text-dark"; // Chờ duyệt
                         if (item.trangThai === "Đã hoàn thành") badgeColor = "bg-success"; // Hoàn thành
-                        else if (item.trangThai === "Từ chối") badgeColor = "bg-danger"; // Bị từ chối
+                        else if (item.trangThai === "Từ chối" || item.trangThai === "HCNS Trả lại") badgeColor = "bg-danger"; // Bị từ chối / Trả lại
 
                         html += `
                             <li class="list-group-item d-flex justify-content-between align-items-center">
