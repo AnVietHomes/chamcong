@@ -11,226 +11,40 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
     <style>
-        body { 
-            background-color: #dcf0fa; 
-            font-family: 'Manrope', sans-serif; 
-            color: #111; 
-        }
-        .login-wrapper { 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            justify-content: center; 
-            min-height: 100vh; 
-            padding: 20px;
-        }
-        .login-header { 
-            text-align: center; 
-            margin-bottom: 30px; 
-        }
-        .login-header img { 
-            height: 60px; 
-            margin-bottom: 15px; 
-        }
-        .login-header h2 { 
-            font-weight: 800; 
-            color: #001a72; 
-            font-size: 28px; 
-            text-transform: uppercase;
-        }
-        .login-container { 
-            background: #fff; 
-            width: 100%; 
-            max-width: 450px; 
-            padding: 40px; 
-            border-radius: 12px; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.05); 
-        }
-        .login-title { 
-            text-align: center; 
-            font-weight: 700; 
-            color: #001a72; 
-            font-size: 18px; 
-            margin-bottom: 25px; 
-        }
-        .form-control { 
-            border: 1px solid #001a72; 
-            border-radius: 6px; 
-            padding: 10px; 
-            font-family: 'Manrope', sans-serif; 
-            font-size: 14px;
-        }
-        .form-control:focus { 
-            box-shadow: none; 
-            border-color: #00104a; 
-        }
-        .form-label { 
-            font-size: 13px; 
-            font-weight: 700; 
-            color: #333; 
-            margin-bottom: 5px;
-        }
-        .btn-brand { 
-            background-color: #001a72; 
-            color: white; 
-            border-radius: 30px; 
-            padding: 12px 0; 
-            font-weight: 700; 
-            width: 100%; 
-            margin-top: 15px; 
-            border: none; 
-            transition: 0.3s;
-        }
-        .btn-brand:hover { 
-            background-color: #00104a; 
-            color: white; 
-        }
-        .login-footer { 
-            margin-top: 30px; 
-            font-size: 11px; 
-            color: #001a72; 
-            text-align: center; 
-            line-height: 1.6; 
-            font-weight: 500; 
-            border-top: 1px solid #eee; 
-            padding-top: 20px;
-        }
-        .dashboard-container { 
-            max-width: 1200px; 
-            margin: 40px auto; 
-            background: #fff; 
-            padding: 30px 40px; 
-            border-radius: 12px; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.05); 
-            display: none; 
-        }
-        .dashboard-header h3 { 
-            color: #001a72; 
-            font-weight: 800; 
-            text-transform: uppercase; 
-            font-size: 24px;
-        }
-        .row-late td { 
-            background-color: #ffeaea !important; 
-            color: #c90000 !important; 
-            font-weight: 700 !important; 
-            border-bottom: 1px solid #ffcccc !important; 
-        }
-        .row-rejected td { 
-            background-color: #f0f2f5 !important; 
-            color: #6c757d !important; 
-            border-bottom: 1px solid #e9ecef !important; 
-        }
-        .row-rejected td span.badge { 
-            opacity: 0.85; 
-        }
-        .table-secondary td { 
-            background-color: #f0f4f8 !important; 
-            color: #001a72 !important; 
-            font-weight: 800;
-        }
-        .table th { 
-            font-weight: 800; 
-            color: #001a72; 
-        }
-        .table td { 
-            vertical-align: middle; 
-            font-size: 14px;
-        }
-        .badge { 
-            font-family: 'Manrope', sans-serif; 
-            font-weight: 600; 
-            padding: 6px 10px; 
-        }
-        .modal-overlay { 
-            position: fixed; 
-            top: 0; 
-            left: 0; 
-            width: 100%; 
-            height: 100%; 
-            background: rgba(0, 26, 114, 0.4); 
-            backdrop-filter: blur(5px); 
-            display: none; 
-            justify-content: center; 
-            align-items: center; 
-            z-index: 1000; 
-        }
-        .modal-box { 
-            background: #fff; 
-            width: 400px; 
-            padding: 30px; 
-            border-radius: 12px; 
-            box-shadow: 0 15px 40px rgba(0,0,0,0.2); 
-            position: relative; 
-        }
-        .modal-title { 
-            font-weight: 800; 
-            color: #001a72; 
-            font-size: 18px; 
-            margin-bottom: 20px; 
-            text-transform: uppercase; 
-            text-align: center;
-        }
-        .close-btn { 
-            position: absolute; 
-            top: 15px; 
-            right: 20px; 
-            font-size: 24px; 
-            cursor: pointer; 
-            color: #999; 
-            line-height: 1;
-        }
-        .toolbar-group { 
-            display: flex; 
-            gap: 15px; 
-            align-items: center; 
-            flex-wrap: wrap;
-        }
-        .filter-date-group { 
-            display: flex; 
-            align-items: center; 
-            gap: 8px; 
-            background: #f8f9fa; 
-            padding: 5px 10px; 
-            border-radius: 8px; 
-            border: 1px solid #dee2e6;
-        }
-        .filter-date-group input { 
-            border: 1px solid #001a72; 
-            border-radius: 4px; 
-            padding: 4px 8px; 
-            font-size: 13px;
-        }
-        .filter-label { 
-            font-size: 12px; 
-            font-weight: 700; 
-            color: #001a72;
-        }
-        .admin-toolbar { 
-            background: #ffeaea; 
-            border: 1px solid #ffcccc; 
-            border-radius: 8px; 
-            padding: 5px 10px; 
-            display: flex; 
-            align-items: center; 
-            gap: 8px; 
-        }
-        .admin-label { 
-            font-size: 12px; 
-            font-weight: 800; 
-            color: #c90000; 
-        }
-        .admin-select { 
-            font-weight: bold; 
-            color: #c90000; 
-            border-color: #c90000; 
-        }
-        .archive-box { 
-            background-color: #f4f6f9; 
-            border: 1px dashed #ced4da; 
-            padding: 12px 20px; 
-            border-radius: 8px; 
-        }
+        body { background-color: #dcf0fa; font-family: 'Manrope', sans-serif; color: #111; }
+        .login-wrapper { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 20px;}
+        .login-header { text-align: center; margin-bottom: 30px; }
+        .login-header img { height: 60px; margin-bottom: 15px; }
+        .login-header h2 { font-weight: 800; color: #001a72; font-size: 28px; text-transform: uppercase;}
+        .login-container { background: #fff; width: 100%; max-width: 450px; padding: 40px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+        .login-title { text-align: center; font-weight: 700; color: #001a72; font-size: 18px; margin-bottom: 25px; }
+        .form-control { border: 1px solid #001a72; border-radius: 6px; padding: 10px; font-family: 'Manrope', sans-serif; font-size: 14px;}
+        .form-control:focus { box-shadow: none; border-color: #00104a; }
+        .form-label { font-size: 13px; font-weight: 700; color: #333; margin-bottom: 5px;}
+        .btn-brand { background-color: #001a72; color: white; border-radius: 30px; padding: 12px 0; font-weight: 700; width: 100%; margin-top: 15px; border: none; transition: 0.3s;}
+        .btn-brand:hover { background-color: #00104a; color: white; }
+        .login-footer { margin-top: 30px; font-size: 11px; color: #001a72; text-align: center; line-height: 1.6; font-weight: 500; border-top: 1px solid #eee; padding-top: 20px;}
+        .dashboard-container { max-width: 1200px; margin: 40px auto; background: #fff; padding: 30px 40px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); display: none; }
+        .dashboard-header h3 { color: #001a72; font-weight: 800; text-transform: uppercase; font-size: 24px;}
+        .row-late td { background-color: #ffeaea !important; color: #c90000 !important; font-weight: 700 !important; border-bottom: 1px solid #ffcccc !important; }
+        .row-rejected td { background-color: #f0f2f5 !important; color: #6c757d !important; border-bottom: 1px solid #e9ecef !important; }
+        .row-rejected td span.badge { opacity: 0.85; }
+        .table-secondary td { background-color: #f0f4f8 !important; color: #001a72 !important; font-weight: 800;}
+        .table th { font-weight: 800; color: #001a72; }
+        .table td { vertical-align: middle; font-size: 14px;}
+        .badge { font-family: 'Manrope', sans-serif; font-weight: 600; padding: 6px 10px; }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 26, 114, 0.4); backdrop-filter: blur(5px); display: none; justify-content: center; align-items: center; z-index: 1000; }
+        .modal-box { background: #fff; width: 400px; padding: 30px; border-radius: 12px; box-shadow: 0 15px 40px rgba(0,0,0,0.2); position: relative; }
+        .modal-title { font-weight: 800; color: #001a72; font-size: 18px; margin-bottom: 20px; text-transform: uppercase; text-align: center;}
+        .close-btn { position: absolute; top: 15px; right: 20px; font-size: 24px; cursor: pointer; color: #999; line-height: 1;}
+        .toolbar-group { display: flex; gap: 15px; align-items: center; flex-wrap: wrap;}
+        .filter-date-group { display: flex; align-items: center; gap: 8px; background: #f8f9fa; padding: 5px 10px; border-radius: 8px; border: 1px solid #dee2e6;}
+        .filter-date-group input { border: 1px solid #001a72; border-radius: 4px; padding: 4px 8px; font-size: 13px;}
+        .filter-label { font-size: 12px; font-weight: 700; color: #001a72;}
+        .admin-toolbar { background: #ffeaea; border: 1px solid #ffcccc; border-radius: 8px; padding: 5px 10px; display: flex; align-items: center; gap: 8px; }
+        .admin-label { font-size: 12px; font-weight: 800; color: #c90000; }
+        .admin-select { font-weight: bold; color: #c90000; border-color: #c90000; }
+        .archive-box { background-color: #f4f6f9; border: 1px dashed #ced4da; padding: 12px 20px; border-radius: 8px; }
     </style>
 </head>
 <body>
@@ -294,7 +108,7 @@
         </div>
     </div>
 
-    <div id="archiveContainer" class="archive-box mb-3 d-flex gap-2 flex-wrap align-items-center" style="display: none !important;">
+    <div id="archiveContainer" class="archive-box mb-3 gap-2 flex-wrap align-items-center" style="display: none !important;">
     </div>
     
     <div class="table-responsive">
@@ -331,16 +145,13 @@
 </div>
 
 <script>
-    // ==========================================
-    // DÁN LINK API CỦA BẠN VÀO ĐÂY
-    // ==========================================
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbxiSMKHNSSRaJu5w_AYq07v_a-lb3eTeo0UXNJjLF8bi8KxQ5zw3h4kIzOqmZck01ty/exec';
+    // DÁN LINK API WEB APP CỦA BẠN VÀO ĐÂY
+    const scriptURL = 'YOUR_API_URL_HERE';
     
     let globalData = []; 
     let currentUserRole = ""; 
     let activeArchiveMonth = null; 
 
-    // Xử lý đăng nhập
     document.getElementById('loginForm').addEventListener('submit', function(e) {
         e.preventDefault();
         const btn = document.getElementById('btnLogin');
@@ -367,7 +178,6 @@
             });
     });
 
-    // Hiển thị Dashboard sau khi đăng nhập thành công
     function showDashboard() {
         const user = JSON.parse(localStorage.getItem('user'));
         if(!user) return;
@@ -378,9 +188,12 @@
 
         if (user.role === 'ADMIN') {
             document.getElementById('adminSwitcher').style.display = 'flex';
-            if (user.managers) {
-                const select = document.getElementById('adminRoleSelect');
-                select.innerHTML = '<option value="HCNS|ALL">Màn hình Hành chính nhân sự</option>';
+            const select = document.getElementById('adminRoleSelect');
+            
+            // FIX QUYỀN ADMIN: Khởi tạo tùy chọn mặc định trước tiên để chống crash khi LocalStorage rỗng hoặc refresh trang
+            select.innerHTML = '<option value="HCNS|ALL">Màn hình Hành chính nhân sự</option>';
+            
+            if (user.managers && user.managers.length > 0) {
                 let gdkdGroup = '<optgroup label="Mô phỏng Giám đốc khối">';
                 let tpkdGroup = '<optgroup label="Mô phỏng Trưởng phòng">';
                 
@@ -412,9 +225,11 @@
         }
     }
 
-    // Đổi quyền Admin mô phỏng
     function switchAdminRole() {
-        const val = document.getElementById('adminRoleSelect').value.split('|');
+        const selectEl = document.getElementById('adminRoleSelect');
+        if (!selectEl || !selectEl.value) return; // Bảo vệ an toàn tuyệt đối chống đọc giá trị rỗng khi chưa nạp xong
+        
+        const val = selectEl.value.split('|');
         const spoofedRole = val[0];
         const spoofedPhongBan = val[1];
 
@@ -433,7 +248,6 @@
         fetchData({ role: spoofedRole, phongBan: spoofedPhongBan });
     }
 
-    // Lấy dữ liệu từ Google Sheets
     function fetchData(userObj) {
         document.getElementById('loadingText').style.display = 'block';
         document.getElementById('tableBody').innerHTML = '';
@@ -449,17 +263,13 @@
                 document.getElementById('loadingText').style.display = 'none';
                 if(data.status === "success") {
                     globalData = data.data; 
-                    if(userObj.role === 'HCNS' || userObj.role.includes('GĐKD')) {
-                        populateDeptFilter(globalData);
-                    }
+                    if(userObj.role === 'HCNS' || userObj.role.includes('GĐKD')) populateDeptFilter(globalData);
                     renderTable();
                 }
             });
     }
 
-    function getSubmitTimeMs(id) { 
-        return parseInt(id.replace("PC", "")); 
-    }
+    function getSubmitTimeMs(id) { return parseInt(id.replace("PC", "")); }
 
     function formatDisplayDate(dateStr) {
         if (!dateStr) return "";
@@ -484,7 +294,6 @@
         return timeStr;
     }
 
-    // Kiểm tra nộp muộn quá 5 ngày
     function isLateSubmission(id, dateStr) {
         const submitDate = new Date(getSubmitTimeMs(id));
         submitDate.setHours(0,0,0,0); 
@@ -498,15 +307,12 @@
             const parts = cleanDateStr.split('-');
             if (parts[0].length === 4) absentDate = new Date(parts[0], parts[1] - 1, parts[2]);
             else absentDate = new Date(parts[2], parts[1] - 1, parts[0]);
-        } else { 
-            absentDate = new Date(cleanDateStr); 
-        }
+        } else { absentDate = new Date(cleanDateStr); }
         absentDate.setHours(0,0,0,0);
         const diffTime = submitDate.getTime() - absentDate.getTime();
         return Math.floor(diffTime / (1000 * 60 * 60 * 24)) > 5;
     }
 
-    // Nạp dữ liệu bộ lọc phòng ban
     function populateDeptFilter(data) {
         const filter = document.getElementById('deptFilter');
         const currentSelection = filter.value;
@@ -514,14 +320,12 @@
         filter.innerHTML = '<option value="ALL">Tất cả phòng ban</option>';
         depts.forEach(dept => {
             const opt = document.createElement('option');
-            opt.value = dept; 
-            opt.innerText = "Phòng " + dept;
+            opt.value = dept; opt.innerText = "Phòng " + dept;
             filter.appendChild(opt);
         });
         filter.value = currentSelection !== "" ? currentSelection : "ALL";
     }
 
-    // Kiểm tra và gom tháng lưu trữ
     function isMonthArchived(monthYearStr) {
         if (monthYearStr === "Khác") return false;
         const parts = monthYearStr.split('/');
@@ -583,7 +387,6 @@
         renderTable();
     }
 
-    // Hiển thị dữ liệu lên bảng
     function renderTable() {
         const tbody = document.getElementById('tableBody');
         tbody.innerHTML = '';
@@ -605,9 +408,7 @@
 
         if (currentUserRole === 'HCNS' || currentUserRole.includes('GĐKD')) {
             const selectedDept = document.getElementById('deptFilter').value;
-            if (selectedDept !== 'ALL') {
-                filteredData = filteredData.filter(item => item.phongBan === selectedDept);
-            }
+            if (selectedDept !== 'ALL') filteredData = filteredData.filter(item => item.phongBan === selectedDept);
             
             if (currentUserRole === 'HCNS') {
                 const startDateStr = document.getElementById('filterStartDate').value;
@@ -650,7 +451,6 @@
         }
     }
 
-    // Vẽ từng dòng dữ liệu
     function drawRow(item, tbody) {
         const tr = document.createElement('tr');
         const displayDate = formatDisplayDate(item.ngay);
@@ -697,13 +497,9 @@
         }
 
         let statusBadge = "";
-        if (item.trangThai === "Từ chối") {
-            statusBadge = `<span class="badge bg-danger" style="border-radius: 20px;">Từ chối</span>`;
-        } else if (item.trangThai === "HCNS Trả lại") {
-            statusBadge = `<span class="badge bg-secondary" style="border-radius: 20px;">HCNS Trả lại</span>`;
-        } else {
-            statusBadge = `<span class="badge bg-warning text-dark" style="border-radius: 20px;">${item.trangThai}</span>`;
-        }
+        if (item.trangThai === "Từ chối") statusBadge = `<span class="badge bg-danger" style="border-radius: 20px;">Từ chối</span>`;
+        else if (item.trangThai === "HCNS Trả lại") statusBadge = `<span class="badge bg-secondary" style="border-radius: 20px;">HCNS Trả lại</span>`;
+        else statusBadge = `<span class="badge bg-warning text-dark" style="border-radius: 20px;">${item.trangThai}</span>`;
 
         tr.innerHTML = `
             <td>${item.name}</td>
@@ -721,89 +517,60 @@
         tbody.appendChild(tr);
     }
 
-    // Các hàm xử lý trạng thái
     function approveRequest(id, btnElement) {
         if(!confirm("Bạn chắc chắn muốn DUYỆT phiếu này?")) return;
-        const tr = btnElement.closest('tr'); 
-        tr.style.opacity = '0.4';
-        const buttons = tr.querySelectorAll('button'); 
-        buttons.forEach(b => b.disabled = true);
+        const tr = btnElement.closest('tr'); tr.style.opacity = '0.4';
+        const buttons = tr.querySelectorAll('button'); buttons.forEach(b => b.disabled = true);
         btnElement.innerText = 'Đang xử lý...';
         
         const user = JSON.parse(localStorage.getItem('user'));
         const signName = user.role === 'ADMIN' ? `${user.name} (Quản trị viên)` : user.name;
 
         const formData = new FormData();
-        formData.append('action', 'approve'); 
-        formData.append('id', id);
-        formData.append('role', currentUserRole); 
-        formData.append('name', signName);
+        formData.append('action', 'approve'); formData.append('id', id);
+        formData.append('role', currentUserRole); formData.append('name', signName);
 
         fetch(scriptURL, { method: 'POST', body: new URLSearchParams(formData) })
             .then(res => res.json())
             .then(data => {
-                if(data.status === "success") { 
-                    globalData = globalData.filter(item => item.id !== id); 
-                    tr.remove(); 
-                } else { 
-                    alert("Lỗi từ máy chủ!"); 
-                    window.location.reload(); 
-                }
-            }).catch(err => { 
-                alert("Lỗi mạng!"); 
-                window.location.reload(); 
-            });
+                if(data.status === "success") { globalData = globalData.filter(item => item.id !== id); tr.remove(); } 
+                else { alert("Lỗi từ máy chủ!"); window.location.reload(); }
+            }).catch(err => { alert("Lỗi mạng!"); window.location.reload(); });
     }
 
     function rejectRequest(id, btnElement) {
         if(!confirm("Bạn chắc chắn muốn TỪ CHỐI phiếu này?")) return;
-        const tr = btnElement.closest('tr'); 
-        tr.style.opacity = '0.4';
-        const buttons = tr.querySelectorAll('button'); 
-        buttons.forEach(b => b.disabled = true);
+        const tr = btnElement.closest('tr'); tr.style.opacity = '0.4';
+        const buttons = tr.querySelectorAll('button'); buttons.forEach(b => b.disabled = true);
         btnElement.innerText = 'Đang hủy...';
         
         const user = JSON.parse(localStorage.getItem('user'));
         const signName = user.role === 'ADMIN' ? `${user.name} (Quản trị viên)` : user.name;
 
         const formData = new FormData();
-        formData.append('action', 'reject'); 
-        formData.append('id', id);
-        formData.append('role', currentUserRole); 
-        formData.append('name', signName);
+        formData.append('action', 'reject'); formData.append('id', id);
+        formData.append('role', currentUserRole); formData.append('name', signName);
 
         fetch(scriptURL, { method: 'POST', body: new URLSearchParams(formData) })
             .then(res => res.json())
             .then(data => {
-                if(data.status === "success") { 
-                    globalData = globalData.filter(item => item.id !== id); 
-                    tr.remove(); 
-                } else { 
-                    alert("Lỗi từ máy chủ!"); 
-                    window.location.reload(); 
-                }
-            }).catch(err => { 
-                alert("Lỗi mạng!"); 
-                window.location.reload(); 
-            });
+                if(data.status === "success") { globalData = globalData.filter(item => item.id !== id); tr.remove(); } 
+                else { alert("Lỗi từ máy chủ!"); window.location.reload(); }
+            }).catch(err => { alert("Lỗi mạng!"); window.location.reload(); });
     }
 
     function returnRequest(id, btnElement) {
         if(!confirm("Hành động này sẽ thay đổi trạng thái của đơn thành Trả lại. Bạn có chắc chắn?")) return;
-        const tr = btnElement.closest('tr'); 
-        tr.style.opacity = '0.4';
-        const buttons = tr.querySelectorAll('button'); 
-        buttons.forEach(b => b.disabled = true);
+        const tr = btnElement.closest('tr'); tr.style.opacity = '0.4';
+        const buttons = tr.querySelectorAll('button'); buttons.forEach(b => b.disabled = true);
         btnElement.innerText = 'Đang xử lý...';
         
         const user = JSON.parse(localStorage.getItem('user'));
         const signName = user.role === 'ADMIN' ? `${user.name} (Quản trị viên)` : user.name;
 
         const formData = new FormData();
-        formData.append('action', 'returnReq'); 
-        formData.append('id', id);
-        formData.append('role', currentUserRole); 
-        formData.append('name', signName);
+        formData.append('action', 'returnReq'); formData.append('id', id);
+        formData.append('role', currentUserRole); formData.append('name', signName);
 
         fetch(scriptURL, { method: 'POST', body: new URLSearchParams(formData) })
             .then(res => res.json())
@@ -813,26 +580,14 @@
                     tr.querySelector('.status-col').innerHTML = `<span class="badge bg-secondary" style="border-radius: 20px;">HCNS Trả lại</span>`;
                     tr.querySelector('.action-col').innerHTML = `<span class="badge bg-secondary" style="border-radius: 20px;">HCNS Trả lại</span>`;
                     tr.style.opacity = '1';
-                } else { 
-                    alert("Lỗi máy chủ!"); 
-                    window.location.reload(); 
-                }
-            }).catch(err => { 
-                alert("Lỗi mạng!"); 
-                window.location.reload(); 
-            });
+                } else { alert("Lỗi máy chủ!"); window.location.reload(); }
+            }).catch(err => { alert("Lỗi mạng!"); window.location.reload(); });
     }
 
-    function logout() { 
-        localStorage.removeItem('user'); 
-        window.location.reload(); 
-    }
-    
-    window.onload = function() { 
-        if(localStorage.getItem('user')) showDashboard(); 
-    };
+    function logout() { localStorage.removeItem('user'); window.location.reload(); }
+    window.onload = function() { if(localStorage.getItem('user')) showDashboard(); };
 
-    /* ================= CÁC HÀM XUẤT PDF ĐÃ SỬA LỖI TRANG TRẮNG ================= */
+    /* ================= CÁC HÀM XUẤT PDF - THUẬT TOÁN ĐÃ FIX LỖI TRẮNG VÀ TRANG THỪA ================= */
     function getMonthYear(dateStr) {
         let cleanDate = dateStr;
         if (cleanDate.includes('T')) cleanDate = cleanDate.split('T')[0];
@@ -843,17 +598,14 @@
             return `${parts[1]}/${parts[2]}`;
         }
         if (cleanDate.includes('/')) {
-            const parts = cleanDate.split('/'); 
-            return `${parts[1]}/${parts[2]}`;
+            const parts = cleanDate.split('/'); return `${parts[1]}/${parts[2]}`;
         }
         return "Khác";
     }
 
     function openExportModal() {
-        const select = document.getElementById('monthSelect'); 
-        select.innerHTML = '';
+        const select = document.getElementById('monthSelect'); select.innerHTML = '';
         const monthCounts = {};
-        
         globalData.forEach(item => {
             if(item.trangThai !== "Từ chối" && item.trangThai !== "HCNS Trả lại") {
                 const my = getMonthYear(item.ngay);
@@ -862,14 +614,11 @@
             }
         });
 
-        if (Object.keys(monthCounts).length === 0) { 
-            select.innerHTML = '<option value="">Không có dữ liệu hợp lệ</option>'; 
-        } else {
+        if (Object.keys(monthCounts).length === 0) { select.innerHTML = '<option value="">Không có dữ liệu hợp lệ</option>'; } 
+        else {
             for (const [my, count] of Object.entries(monthCounts)) {
                 if(my !== "Khác") {
-                    const opt = document.createElement('option'); 
-                    opt.value = my; 
-                    opt.innerText = `Tháng ${my} (${count} phiếu)`;
+                    const opt = document.createElement('option'); opt.value = my; opt.innerText = `Tháng ${my} (${count} phiếu)`;
                     select.appendChild(opt);
                 }
             }
@@ -877,56 +626,45 @@
         document.getElementById('exportModal').style.display = 'flex';
     }
 
-    function closeExportModal() { 
-        document.getElementById('exportModal').style.display = 'none'; 
-    }
+    function closeExportModal() { document.getElementById('exportModal').style.display = 'none'; }
 
     function generatePDF() {
         const selectedMonth = document.getElementById('monthSelect').value;
-        if(!selectedMonth) { 
-            alert("Vui lòng chọn tháng cần xuất!"); 
-            return; 
-        }
+        if(!selectedMonth) { alert("Vui lòng chọn tháng cần xuất!"); return; }
 
         const btn = document.getElementById('btnDownloadPDF');
-        btn.innerText = "ĐANG TẠO PDF, VUI LÒNG CHỜ..."; 
-        btn.disabled = true;
+        btn.innerText = "ĐANG TẠO PDF, VUI LÒNG CHỜ..."; btn.disabled = true;
 
         const dataToExport = globalData.filter(item => getMonthYear(item.ngay) === selectedMonth && item.trangThai !== "Từ chối" && item.trangThai !== "HCNS Trả lại");
 
+        if (dataToExport.length === 0) {
+            alert("Không có dữ liệu hợp lệ để xuất báo cáo PDF cho tháng này!");
+            btn.innerText = "⬇️ TẢI XUỐNG NGAY"; btn.disabled = false;
+            return;
+        }
+
         const wrapper = document.createElement('div');
-        wrapper.style.position = 'absolute'; 
-        wrapper.style.left = '-9999px'; 
-        wrapper.style.top = '0';
+        wrapper.style.position = 'absolute'; wrapper.style.left = '-9999px'; wrapper.style.top = '0';
+        wrapper.style.width = '800px';
         document.body.appendChild(wrapper);
 
         const chunks = [];
-        for (let i = 0; i < dataToExport.length; i += 2) { 
-            chunks.push(dataToExport.slice(i, i + 2)); 
-        }
+        for (let i = 0; i < dataToExport.length; i += 2) { chunks.push(dataToExport.slice(i, i + 2)); }
 
         chunks.forEach((chunk) => {
             const page = document.createElement('div');
             page.style.width = '800px'; 
-            page.style.height = '1131px'; 
+            page.style.height = '1122px'; // Khổ dọc tỉ lệ pixel A4 chuẩn chỉnh
             page.style.backgroundColor = '#fff';
-            page.style.display = 'flex'; 
-            page.style.flexDirection = 'column'; 
-            page.style.fontFamily = 'Manrope, sans-serif'; 
-            page.style.color = '#111';
+            page.style.display = 'flex'; page.style.flexDirection = 'column'; page.style.fontFamily = 'Manrope, sans-serif'; page.style.color = '#111';
+            page.style.boxSizing = 'border-box'; page.style.overflow = 'hidden';
             
             chunk.forEach((item, itemIndex) => {
                 const ticket = document.createElement('div');
-                ticket.style.flex = '1'; 
-                ticket.style.padding = '40px'; 
-                ticket.style.boxSizing = 'border-box';
-                
-                if (itemIndex === 0 && chunk.length > 1) { 
-                    ticket.style.borderBottom = '1px dashed #ccc'; 
-                }
+                ticket.style.flex = '1'; ticket.style.padding = '40px'; ticket.style.boxSizing = 'border-box';
+                if (itemIndex === 0 && chunk.length > 1) { ticket.style.borderBottom = '1px dashed #ccc'; }
 
-                const displayDate = formatDisplayDate(item.ngay); 
-                const displayTime = formatDisplayTime(item.gio);
+                const displayDate = formatDisplayDate(item.ngay); const displayTime = formatDisplayTime(item.gio);
 
                 ticket.innerHTML = `
                     <div style="text-align: center; margin-bottom: 25px; border-bottom: 2px solid #001a72; padding-bottom: 15px;">
@@ -954,25 +692,28 @@
 
         const opt = {
             margin:       0, 
-            filename: `PhieuChamCong_Thang_${selectedMonth.replace('/','_')}.pdf`,
+            filename:     `PhieuChamCong_Thang_${selectedMonth.replace('/','_')}.pdf`,
             image:        { type: 'jpeg', quality: 0.98 },
             html2canvas:  { scale: 2, useCORS: true },
             jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
         };
 
-        if(wrapper.children.length === 0) {
-            alert("Không có dữ liệu để xuất!"); 
-            btn.innerText = "⬇️ TẢI XUỐNG NGAY"; 
-            btn.disabled = false; 
-            document.body.removeChild(wrapper); 
-            return;
+        const pages = wrapper.children;
+
+        // THUẬT TOÁN ĐỒNG BỘ CHUẨN: Chuyển đổi tuần tự từng trang canvas để lách bộ nhớ GPU và tự ngắt trang hoàn hảo
+        let worker = html2pdf().set(opt).from(pages[0]).toPdf();
+
+        for (let i = 1; i < pages.length; i++) {
+            worker = worker.get('pdf').from(pages[i]).toContainer().toCanvas().toPdf();
         }
 
-        html2pdf().set(opt).from(wrapper).save().then(() => {
-            btn.innerText = "⬇️ TẢI XUỐNG NGAY"; 
-            btn.disabled = false;
-            document.body.removeChild(wrapper); 
-            closeExportModal();
+        worker.save().then(() => {
+            btn.innerText = "⬇️ TẢI XUỐNG NGAY"; btn.disabled = false;
+            document.body.removeChild(wrapper); closeExportModal();
+        }).catch(err => {
+            alert("Có lỗi xảy ra khi tạo PDF. Vui lòng thử lại.");
+            btn.innerText = "⬇️ TẢI XUỐNG NGAY"; btn.disabled = false;
+            if(wrapper.parentNode) document.body.removeChild(wrapper);
         });
     }
 </script>
