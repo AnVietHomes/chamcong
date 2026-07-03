@@ -628,12 +628,15 @@
 
     function closeExportModal() { document.getElementById('exportModal').style.display = 'none'; }
 
-    function generatePDF() {
+  // THÊM CHỮ "async" ĐỂ KHÓA ĐỒNG BỘ VÒNG LẶP
+    async function generatePDF() {
         const selectedMonth = document.getElementById('monthSelect').value;
         if(!selectedMonth) { alert("Vui lòng chọn tháng cần xuất!"); return; }
 
         const btn = document.getElementById('btnDownloadPDF');
-        btn.innerText = "ĐANG TẠO PDF, VUI LÒNG CHỜ..."; btn.disabled = true;
+        // Quá trình này sẽ hơi lâu vì nó phải vẽ cẩn thận từng trang một
+        btn.innerText = "ĐANG TẠO PDF (Sẽ mất khoảng 1-2 phút)..."; 
+        btn.disabled = true;
 
         const dataToExport = globalData.filter(item => getMonthYear(item.ngay) === selectedMonth && item.trangThai !== "Từ chối" && item.trangThai !== "HCNS Trả lại");
 
@@ -654,7 +657,7 @@
         chunks.forEach((chunk) => {
             const page = document.createElement('div');
             page.style.width = '800px'; 
-            page.style.height = '1122px'; // Khổ dọc tỉ lệ pixel A4 chuẩn chỉnh
+            page.style.height = '1122px'; 
             page.style.backgroundColor = '#fff';
             page.style.display = 'flex'; page.style.flexDirection = 'column'; page.style.fontFamily = 'Manrope, sans-serif'; page.style.color = '#111';
             page.style.boxSizing = 'border-box'; page.style.overflow = 'hidden';
@@ -694,29 +697,38 @@
             margin:       0, 
             filename:     `PhieuChamCong_Thang_${selectedMonth.replace('/','_')}.pdf`,
             image:        { type: 'jpeg', quality: 0.98 },
-            html2canvas:  { scale: 2, useCORS: true },
+            html2canvas:  { scale: 2, useCORS: true, logging: false },
             jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
         };
 
         const pages = wrapper.children;
 
-        // THUẬT TOÁN ĐỒNG BỘ CHUẨN: Chuyển đổi tuần tự từng trang canvas để lách bộ nhớ GPU và tự ngắt trang hoàn hảo
-        let worker = html2pdf().set(opt).from(pages[0]).toPdf();
+        try {
+            // Khởi tạo PDF với trang đầu tiên
+            let worker = html2pdf().set(opt).from(pages[0]).toPdf();
 
-        for (let i = 1; i < pages.length; i++) {
-            worker = worker.get('pdf').then(pdf => {
-                pdf.addPage(); // LỆNH QUAN TRỌNG ĐỂ TẠO TRANG MỚI CHO PDF
-            }).from(pages[i]).toContainer().toCanvas().toPdf();
-        }
+            // Vòng lặp chờ an toàn (Sẽ vẽ xong trang này mới chạy trang tiếp theo)
+            for (let i = 1; i < pages.length; i++) {
+                await worker; // LỆNH TRÓI BUỘC VÒNG LẶP: Đợi thao tác trước hoàn thành
+                worker = worker.get('pdf').then(pdf => {
+                    pdf.addPage();
+                }).from(pages[i]).toContainer().toCanvas().toPdf();
+            }
 
-        worker.save().then(() => {
-            btn.innerText = "⬇️ TẢI XUỐNG NGAY"; btn.disabled = false;
-            document.body.removeChild(wrapper); closeExportModal();
-        }).catch(err => {
+            // Chờ cho tất cả các trang lưu xong
+            await worker.save();
+
+            btn.innerText = "⬇️ TẢI XUỐNG NGAY"; 
+            btn.disabled = false;
+            document.body.removeChild(wrapper); 
+            closeExportModal();
+        } catch (error) {
+            console.error(error);
             alert("Có lỗi xảy ra khi tạo PDF. Vui lòng thử lại.");
-            btn.innerText = "⬇️ TẢI XUỐNG NGAY"; btn.disabled = false;
+            btn.innerText = "⬇️ TẢI XUỐNG NGAY"; 
+            btn.disabled = false;
             if(wrapper.parentNode) document.body.removeChild(wrapper);
-        });
+        }
     }
 </script>
 
