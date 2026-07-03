@@ -704,7 +704,9 @@
         let worker = html2pdf().set(opt).from(pages[0]).toPdf();
 
         for (let i = 1; i < pages.length; i++) {
-            worker = worker.get('pdf').from(pages[i]).toContainer().toCanvas().toPdf();
+            worker = worker.get('pdf').then(pdf => {
+                pdf.addPage(); // LỆNH QUAN TRỌNG ĐỂ TẠO TRANG MỚI CHO PDF
+            }).from(pages[i]).toContainer().toCanvas().toPdf();
         }
 
         worker.save().then(() => {
