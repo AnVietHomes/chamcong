@@ -178,7 +178,7 @@
             });
     });
 
-    function showDashboard() {
+function showDashboard() {
         const user = JSON.parse(localStorage.getItem('user'));
         if(!user) return;
 
@@ -190,33 +190,70 @@
             document.getElementById('adminSwitcher').style.display = 'flex';
             const select = document.getElementById('adminRoleSelect');
             
-            select.innerHTML = '<option value="HCNS|ALL">Màn hình Hành chính nhân sự</option>';
+            // Xóa sạch danh sách cũ để dựng lại
+            select.innerHTML = '';
             
-            // THUẬT TOÁN TỐI ƯU: Quét và bao quát mọi trường hợp sai chính tả (khoảng trắng dư) trong Google Sheet
+            // 1. Tạo tùy chọn mặc định cho HCNS
+            const hcnsOpt = document.createElement('option');
+            hcnsOpt.value = "HCNS|ALL";
+            hcnsOpt.textContent = "Màn hình Hành chính nhân sự";
+            select.appendChild(hcnsOpt);
+            
+            // 2. Tự động quét và dựng danh sách Sếp từ Google Sheets bằng DOM an toàn
             if (user.managers && user.managers.length > 0) {
-                let gdkdGroup = '<optgroup label="Mô phỏng Giám đốc khối">';
-                let tpkdGroup = '<optgroup label="Mô phỏng Trưởng phòng">';
-                let otherGroup = '<optgroup label="Các quản lý khác">';
-                let hasOther = false;
+                const gdkdGroup = document.createElement('optgroup');
+                gdkdGroup.label = "Mô phỏng Giám đốc khối";
                 
+                const tpkdGroup = document.createElement('optgroup');
+                tpkdGroup.label = "Mô phỏng Trưởng phòng";
+                
+                const otherGroup = document.createElement('optgroup');
+                otherGroup.label = "Các quản lý khác";
+
                 user.managers.forEach(m => {
-                    const val = `${m.role}|${m.depts}`;
-                    const txt = `${m.role} ${m.depts ? '- ' + m.depts : ''} (${m.name})`;
-                    const roleUpper = m.role.toUpperCase(); // Chuẩn hóa in hoa toàn bộ để so sánh
+                    const opt = document.createElement('option');
+                    opt.value = `${m.role}|${m.depts}`;
+                    opt.textContent = `${m.role} ${m.depts ? '- ' + m.depts : ''} (${m.name})`;
                     
-                    if (roleUpper.includes("GĐKD")) {
-                        gdkdGroup += `<option value="${val}">${txt}</option>`;
-                    } else if (roleUpper.includes("TPKD")) {
-                        tpkdGroup += `<option value="${val}">${txt}</option>`;
-                    } else {
-                        otherGroup += `<option value="${val}">${txt}</option>`;
-                        hasOther = true;
-                    }
+                    const roleUpper = m.role.toUpperCase(); 
+                    if (roleUpper.includes("GĐKD")) gdkdGroup.appendChild(opt);
+                    else if (roleUpper.includes("TPKD")) tpkdGroup.appendChild(opt);
+                    else otherGroup.appendChild(opt);
                 });
-                
-                select.innerHTML += gdkdGroup + '</optgroup>' + tpkdGroup + '</optgroup>';
-                if(hasOther) select.innerHTML += otherGroup + '</optgroup>';
+
+                // Chỉ gắn các nhóm có chứa dữ liệu vào giao diện
+                if (gdkdGroup.children.length > 0) select.appendChild(gdkdGroup);
+                if (tpkdGroup.children.length > 0) select.appendChild(tpkdGroup);
+                if (otherGroup.children.length > 0) select.appendChild(otherGroup);
+            } 
+            // 3. LƯỚI AN TOÀN: Nếu chưa đồng bộ được, nạp ngay danh sách cứng dự phòng
+            else {
+                select.innerHTML += `
+                    <optgroup label="Mô phỏng Giám đốc khối">
+                        <option value="GĐKD kiêm TPKD|AV1, AV2">Sếp kiêm nhiệm (VD: GĐKD kiêm TPKD AV1, AV2)</option>
+                        <option value="GĐKD|AV1, AV2, AV3">GĐKD - Khối 1 (VD: AV1, AV2, AV3)</option>
+                        <option value="GĐKD|AV5, AV6, AV8, AV9">GĐKD - Khối 2 (VD: AV5, AV6, AV8, AV9)</option>
+                        <option value="GĐKD|AV11, AV12, AV16, AV19, AV89">GĐKD - Khối 3 (VD: AV11, AV12...)</option>
+                    </optgroup>
+                    <optgroup label="Màn hình Trưởng phòng">
+                        <option value="TPKD|AV1">TPKD - Phòng AV1</option>
+                        <option value="TPKD|AV2">TPKD - Phòng AV2</option>
+                        <option value="TPKD|AV3">TPKD - Phòng AV3</option>
+                        <option value="TPKD|AV5">TPKD - Phòng AV5</option>
+                        <option value="TPKD|AV6">TPKD - Phòng AV6</option>
+                        <option value="TPKD|AV8">TPKD - Phòng AV8</option>
+                        <option value="TPKD|AV9">TPKD - Phòng AV9</option>
+                        <option value="TPKD|AV11">TPKD - Phòng AV11</option>
+                        <option value="TPKD|AV12">TPKD - Phòng AV12</option>
+                        <option value="TPKD|AV16">TPKD - Phòng AV16</option>
+                        <option value="TPKD|AV18">TPKD - Phòng AV18</option>
+                        <option value="TPKD|AV19">TPKD - Phòng AV19</option>
+                        <option value="TPKD|AV89">TPKD - Phòng AV89</option>
+                    </optgroup>
+                `;
+                console.warn("Đang sử dụng danh sách Sếp dự phòng do LocalStorage chưa đồng bộ bản mới.");
             }
+            
             switchAdminRole(); 
         } else {
             currentUserRole = user.role;
@@ -236,7 +273,7 @@
 
     function switchAdminRole() {
         const selectEl = document.getElementById('adminRoleSelect');
-        if (!selectEl || !selectEl.value) return; 
+        if (!selectEl || !selectEl.value) return; // Bảo vệ an toàn tuyệt đối chống đọc giá trị rỗng khi chưa nạp xong
         
         const val = selectEl.value.split('|');
         const spoofedRole = val[0];
@@ -593,14 +630,10 @@
             }).catch(err => { alert("Lỗi mạng!"); window.location.reload(); });
     }
 
-    // ĐĂNG XUẤT ĐỂ LÀM MỚI DỮ LIỆU BỘ NHỚ LOCAL STORAGE
-    function logout() { 
-        localStorage.removeItem('user'); 
-        window.location.reload(); 
-    }
+    function logout() { localStorage.removeItem('user'); window.location.reload(); }
     window.onload = function() { if(localStorage.getItem('user')) showDashboard(); };
 
-    /* ================= CÁC HÀM XUẤT PDF ================= */
+    /* ================= CÁC HÀM XUẤT PDF - THUẬT TOÁN ĐÃ FIX LỖI TRẮNG VÀ TRANG THỪA ================= */
     function getMonthYear(dateStr) {
         let cleanDate = dateStr;
         if (cleanDate.includes('T')) cleanDate = cleanDate.split('T')[0];
@@ -641,11 +674,13 @@
 
     function closeExportModal() { document.getElementById('exportModal').style.display = 'none'; }
 
+  // THÊM CHỮ "async" ĐỂ KHÓA ĐỒNG BỘ VÒNG LẶP
     async function generatePDF() {
         const selectedMonth = document.getElementById('monthSelect').value;
         if(!selectedMonth) { alert("Vui lòng chọn tháng cần xuất!"); return; }
 
         const btn = document.getElementById('btnDownloadPDF');
+        // Quá trình này sẽ hơi lâu vì nó phải vẽ cẩn thận từng trang một
         btn.innerText = "ĐANG TẠO PDF (Sẽ mất khoảng 1-2 phút)..."; 
         btn.disabled = true;
 
@@ -715,15 +750,18 @@
         const pages = wrapper.children;
 
         try {
+            // Khởi tạo PDF với trang đầu tiên
             let worker = html2pdf().set(opt).from(pages[0]).toPdf();
 
+            // Vòng lặp chờ an toàn (Sẽ vẽ xong trang này mới chạy trang tiếp theo)
             for (let i = 1; i < pages.length; i++) {
-                await worker; 
+                await worker; // LỆNH TRÓI BUỘC VÒNG LẶP: Đợi thao tác trước hoàn thành
                 worker = worker.get('pdf').then(pdf => {
                     pdf.addPage();
                 }).from(pages[i]).toContainer().toCanvas().toPdf();
             }
 
+            // Chờ cho tất cả các trang lưu xong
             await worker.save();
 
             btn.innerText = "⬇️ TẢI XUỐNG NGAY"; 
