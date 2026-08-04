@@ -146,7 +146,7 @@
 
 <script>
     // DÁN LINK API WEB APP CỦA BẠN VÀO ĐÂY
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbxiSMKHNSSRaJu5w_AYq07v_a-lb3eTeo0UXNJjLF8bi8KxQ5zw3h4kIzOqmZck01ty/exec';
+    const scriptURL = 'YOUR_API_URL_HERE';
     
     let globalData = []; 
     let currentUserRole = ""; 
@@ -190,23 +190,32 @@
             document.getElementById('adminSwitcher').style.display = 'flex';
             const select = document.getElementById('adminRoleSelect');
             
-            // FIX QUYỀN ADMIN: Khởi tạo tùy chọn mặc định trước tiên để chống crash khi LocalStorage rỗng hoặc refresh trang
             select.innerHTML = '<option value="HCNS|ALL">Màn hình Hành chính nhân sự</option>';
             
+            // THUẬT TOÁN TỐI ƯU: Quét và bao quát mọi trường hợp sai chính tả (khoảng trắng dư) trong Google Sheet
             if (user.managers && user.managers.length > 0) {
                 let gdkdGroup = '<optgroup label="Mô phỏng Giám đốc khối">';
                 let tpkdGroup = '<optgroup label="Mô phỏng Trưởng phòng">';
+                let otherGroup = '<optgroup label="Các quản lý khác">';
+                let hasOther = false;
                 
                 user.managers.forEach(m => {
                     const val = `${m.role}|${m.depts}`;
                     const txt = `${m.role} ${m.depts ? '- ' + m.depts : ''} (${m.name})`;
-                    if (m.role.includes("GĐKD")) {
+                    const roleUpper = m.role.toUpperCase(); // Chuẩn hóa in hoa toàn bộ để so sánh
+                    
+                    if (roleUpper.includes("GĐKD")) {
                         gdkdGroup += `<option value="${val}">${txt}</option>`;
-                    } else if (m.role === "TPKD") {
+                    } else if (roleUpper.includes("TPKD")) {
                         tpkdGroup += `<option value="${val}">${txt}</option>`;
+                    } else {
+                        otherGroup += `<option value="${val}">${txt}</option>`;
+                        hasOther = true;
                     }
                 });
+                
                 select.innerHTML += gdkdGroup + '</optgroup>' + tpkdGroup + '</optgroup>';
+                if(hasOther) select.innerHTML += otherGroup + '</optgroup>';
             }
             switchAdminRole(); 
         } else {
@@ -227,7 +236,7 @@
 
     function switchAdminRole() {
         const selectEl = document.getElementById('adminRoleSelect');
-        if (!selectEl || !selectEl.value) return; // Bảo vệ an toàn tuyệt đối chống đọc giá trị rỗng khi chưa nạp xong
+        if (!selectEl || !selectEl.value) return; 
         
         const val = selectEl.value.split('|');
         const spoofedRole = val[0];
@@ -584,10 +593,14 @@
             }).catch(err => { alert("Lỗi mạng!"); window.location.reload(); });
     }
 
-    function logout() { localStorage.removeItem('user'); window.location.reload(); }
+    // ĐĂNG XUẤT ĐỂ LÀM MỚI DỮ LIỆU BỘ NHỚ LOCAL STORAGE
+    function logout() { 
+        localStorage.removeItem('user'); 
+        window.location.reload(); 
+    }
     window.onload = function() { if(localStorage.getItem('user')) showDashboard(); };
 
-    /* ================= CÁC HÀM XUẤT PDF - THUẬT TOÁN ĐÃ FIX LỖI TRẮNG VÀ TRANG THỪA ================= */
+    /* ================= CÁC HÀM XUẤT PDF ================= */
     function getMonthYear(dateStr) {
         let cleanDate = dateStr;
         if (cleanDate.includes('T')) cleanDate = cleanDate.split('T')[0];
@@ -628,13 +641,11 @@
 
     function closeExportModal() { document.getElementById('exportModal').style.display = 'none'; }
 
-  // THÊM CHỮ "async" ĐỂ KHÓA ĐỒNG BỘ VÒNG LẶP
     async function generatePDF() {
         const selectedMonth = document.getElementById('monthSelect').value;
         if(!selectedMonth) { alert("Vui lòng chọn tháng cần xuất!"); return; }
 
         const btn = document.getElementById('btnDownloadPDF');
-        // Quá trình này sẽ hơi lâu vì nó phải vẽ cẩn thận từng trang một
         btn.innerText = "ĐANG TẠO PDF (Sẽ mất khoảng 1-2 phút)..."; 
         btn.disabled = true;
 
@@ -704,18 +715,15 @@
         const pages = wrapper.children;
 
         try {
-            // Khởi tạo PDF với trang đầu tiên
             let worker = html2pdf().set(opt).from(pages[0]).toPdf();
 
-            // Vòng lặp chờ an toàn (Sẽ vẽ xong trang này mới chạy trang tiếp theo)
             for (let i = 1; i < pages.length; i++) {
-                await worker; // LỆNH TRÓI BUỘC VÒNG LẶP: Đợi thao tác trước hoàn thành
+                await worker; 
                 worker = worker.get('pdf').then(pdf => {
                     pdf.addPage();
                 }).from(pages[i]).toContainer().toCanvas().toPdf();
             }
 
-            // Chờ cho tất cả các trang lưu xong
             await worker.save();
 
             btn.innerText = "⬇️ TẢI XUỐNG NGAY"; 
