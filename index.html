@@ -79,20 +79,9 @@
             <div class="row-item">
                 <div class="label-col"><span>3.</span> Phòng ban:</div>
                 <div class="input-col">
-                    <select class="form-select" name="phongBan" required>
-                        <option value="" disabled selected>Chọn phòng...</option>
-                        <option value="AV1">AV1</option>
-                        <option value="AV2">AV2</option>
-                        <option value="AV3">AV3</option>
-                        <option value="AV5">AV5</option>
-                        <option value="AV6">AV6</option>
-                        <option value="AV8">AV8</option>
-                        <option value="AV9">AV9</option>
-                        <option value="AV11">AV11</option>
-                        <option value="AV12">AV12</option>
-                        <option value="AV16">AV16</option>
-                        <option value="AV19">AV19</option>
-                        <option value="AV89">AV89</option>
+                    <!-- ĐÃ SỬA: Thay thế danh sách cứng bằng id để JS tự động đổ dữ liệu -->
+                    <select class="form-select" name="phongBan" id="phongBanSelect" required>
+                        <option value="" disabled selected>Đang tải danh sách phòng...</option>
                     </select>
                 </div>
             </div>
@@ -165,6 +154,29 @@
 <script>
     // DÁN LINK API CỦA BẠN VÀO ĐÂY
     const scriptURL = 'https://script.google.com/macros/s/AKfycbxiSMKHNSSRaJu5w_AYq07v_a-lb3eTeo0UXNJjLF8bi8KxQ5zw3h4kIzOqmZck01ty/exec';
+
+    // ĐÃ SỬA: TỰ ĐỘNG LẤY PHÒNG BAN VÀ MỞ TRA CỨU TỪ LINK
+    window.addEventListener('DOMContentLoaded', () => {
+        // Tải danh sách phòng
+        const formData = new FormData();
+        formData.append('action', 'getDepartments');
+        fetch(scriptURL, { method: 'POST', body: formData })
+        .then(res => res.json())
+        .then(data => {
+            if(data.status === "success" && data.data.length > 0) {
+                const select = document.getElementById('phongBanSelect');
+                select.innerHTML = '<option value="" disabled selected>Chọn phòng...</option>';
+                data.data.forEach(dept => {
+                    select.innerHTML += `<option value="${dept}">Phòng ${dept}</option>`;
+                });
+            }
+        }).catch(err => console.log("Lỗi tải phòng ban:", err));
+
+        // Tự động mở bảng tra cứu
+        if (window.location.hash === '#tracuu' || window.location.search.includes('view=tracuu')) {
+            setTimeout(() => { openModal(); }, 300);
+        }
+    });
 
     const form = document.forms['chamCongForm'];
     const submitBtn = document.getElementById('submitBtn');
