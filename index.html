@@ -9,6 +9,10 @@
 
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- THƯ VIỆN OCR ĐỂ NHẬN DIỆN CHỮ TRÊN ẢNH (CHỐNG GIAN LẬN TIMEMARK) -->
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+
     <style>
         body { background-color: #dcf0fa; font-family: 'Manrope', sans-serif; color: #111; }
         .top-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 40px; }
@@ -146,9 +150,14 @@
     // DÁN LINK API CỦA BẠN VÀO ĐÂY
     const scriptURL = 'https://script.google.com/macros/s/AKfycbxiSMKHNSSRaJu5w_AYq07v_a-lb3eTeo0UXNJjLF8bi8KxQ5zw3h4kIzOqmZck01ty/exec';
 
-    // TỰ ĐỘNG LẤY PHÒNG BAN VÀ MỞ TRA CỨU TỪ LINK
+    // LẤY PHÒNG BAN VÀ MỞ TRA CỨU
+    function checkAndOpenTracuu() {
+        if (window.location.hash === '#tracuu' || window.location.search.includes('view=tracuu')) {
+            setTimeout(() => { openModal(); }, 100);
+        }
+    }
+
     window.addEventListener('DOMContentLoaded', () => {
-        // Tải danh sách phòng
         const formData = new FormData();
         formData.append('action', 'getDepartments');
         fetch(scriptURL, { method: 'POST', body: formData })
@@ -163,11 +172,11 @@
             }
         }).catch(err => console.log("Lỗi tải phòng ban:", err));
 
-        // Tự động mở bảng tra cứu
-        if (window.location.hash === '#tracuu' || window.location.search.includes('view=tracuu')) {
-            setTimeout(() => { openModal(); }, 300);
-        }
+        checkAndOpenTracuu();
     });
+    
+    window.addEventListener('load', checkAndOpenTracuu);
+    window.addEventListener('hashchange', checkAndOpenTracuu);
 
     const form = document.forms['chamCongForm'];
     const submitBtn = document.getElementById('submitBtn');
@@ -175,7 +184,6 @@
     let fileData = "";
     let fileMimeType = "";
 
-    // HÀM HIỂN THỊ POPUP THÔNG BÁO
     function showCustomAlert(title, msg, color) {
         document.getElementById('customAlertTitle').innerText = title;
         document.getElementById('customAlertTitle').style.color = color;
@@ -192,7 +200,7 @@
         document.getElementById('customAlertModal').style.display = 'none';
     }
 
-    // 1. CHỌN VÀ NÉN ẢNH CLIENT-SIDE
+    // XỬ LÝ ẢNH CLIENT-SIDE
     document.getElementById('fileUpload').addEventListener('change', function(e) {
         const file = e.target.files[0];
         if(!file) {
@@ -204,7 +212,7 @@
             const img = new Image();
             img.onload = function() {
                 const canvas = document.createElement('canvas');
-                const MAX_WIDTH = 800; // Chiều rộng tối đa để nén
+                const MAX_WIDTH = 800;
                 const scaleSize = MAX_WIDTH / img.width;
                 canvas.width = MAX_WIDTH;
                 canvas.height = img.height * scaleSize;
@@ -212,7 +220,6 @@
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-                // Ép sang định dạng JPEG với chất lượng 70%
                 const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
                 fileMimeType = 'image/jpeg';
                 fileData = dataUrl.split(',')[1];
@@ -222,67 +229,25 @@
         reader.readAsDataURL(file);
     });
 
-    // 2. XỬ LÝ GỬI ĐƠN VÀ KIỂM TRA ĐIỀU KIỆN
-    form.addEventListener('submit', e => {
-        e.preventDefault();
-        
-        // Cảnh báo nếu chưa xử lý xong ảnh do thao tác quá nhanh
-        if (fileData === "") {
-            showCustomAlert("❌ LỖI TRỐNG ẢNH", "Vui lòng tải lên hình ảnh minh chứng bắt buộc.", "#c90000");
-            return;
-        }
-        
-        // KIỂM TRA THỜI HẠN NỘP (BLOCK & WARNING)
-        const ngayInput = document.querySelector('input[name="ngay"]').value;
-        const selDate = new Date(ngayInput);
-        selDate.setHours(0,0,0,0);
-        const now = new Date();
-        const todayDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-
-        // Tính tổng số tháng để so sánh khác biệt tháng
-        const selMonths = selDate.getFullYear() * 12 + selDate.getMonth();
-        const nowMonths = now.getFullYear() * 12 + now.getMonth();
-
-        // ĐIỀU KIỆN 1 (HARD BLOCK): Nộp cho tháng trước mà đã qua ngày mùng 3 của tháng hiện tại
-        if (selMonths < nowMonths && now.getDate() > 3) {
-            showCustomAlert("❌ YÊU CẦU BỊ TỪ CHỐI", "Đã quá hạn nộp phiếu chấm công bổ sung, yêu cầu của bạn không thể thực hiện được.", "#c90000");
-            return; 
-        }
-
-        // ĐIỀU KIỆN 2 (SOFT WARNING): Nộp trễ quá 5 ngày
-        const diffTime = todayDate.getTime() - selDate.getTime();
-        const diffDays = Math.floor(diffTime / (1000 * 3600 * 24));
-        const isLate = diffDays > 5;
-
-        // TIẾN HÀNH GỬI
-        const maSo = document.getElementById('inputMaNV').value.trim();
-        document.getElementById('hiddenMaNV').value = "AVH" + maSo;
-
-        submitBtn.disabled = true;
-        submitBtn.innerText = "⏳ Đang tải ảnh và gửi đơn...";
-        submitBtn.style.backgroundColor = "#ffc107";
-        submitBtn.style.color = "#000";
-
+    // HÀM TIẾN HÀNH GỬI DỮ LIỆU LÊN MÁY CHỦ
+    function submitToGoogleSheets(isLate) {
         const formData = new FormData(form);
-
-        if (fileData !== "") {
-            formData.append('fileData', fileData);
-            formData.append('fileMimeType', fileMimeType);
-        }
+        formData.append('coHinhAnh', 'Có'); // Mặc định gửi biến Có vì giờ là bắt buộc
+        formData.append('fileData', fileData);
+        formData.append('fileMimeType', fileMimeType);
 
         fetch(scriptURL, { method: 'POST', body: formData })
         .then(response => response.json())
         .then(data => {
             if(data.status === "success") {
-                submitBtn.innerText = "✅ ĐÃ GỬI THÀNH CÔNG!";
+                submitBtn.innerText = "✅ NỘP PHIẾU THÀNH CÔNG!";
                 submitBtn.style.backgroundColor = "#28a745";
                 submitBtn.style.color = "#fff";
                 
-                // HIỂN THỊ THÔNG BÁO TƯƠNG ỨNG SAU KHI THÀNH CÔNG
                 if(isLate) {
-                    showCustomAlert("⚠️ CHÚ Ý: NỘP TRỄ HẠN", "Nộp phiếu thành công, nhưng do đã quá thời hạn 5 ngày theo quy định nên phiếu của bạn có thể bị HCNS trả lại hoặc không phê duyệt.", "#c90000");
+                    showCustomAlert("⚠️ NỘP TRỄ HẠN", "Nộp phiếu thành công, nhưng do đã quá thời hạn 5 ngày theo quy định nên phiếu của bạn có thể bị HCNS trả lại hoặc không phê duyệt.", "#c90000");
                 } else {
-                    showCustomAlert("✅ THÀNH CÔNG", "Đã gửi phiếu chấm công và tải ảnh thành công!", "#28a745");
+                    showCustomAlert("✅ XÁC MINH HOÀN TẤT", "Đã gửi phiếu chấm công và tải ảnh thành công!", "#28a745");
                 }
 
                 setTimeout(() => {
@@ -296,18 +261,91 @@
                 }, 2000); 
             } else {
                 alert("Lỗi từ hệ thống: " + data.message);
-                submitBtn.disabled = false;
-                submitBtn.innerText = "Xác nhận gửi";
-                submitBtn.style.backgroundColor = "#001a72";
-                submitBtn.style.color = "#fff";
+                resetButton();
             }
         })
         .catch(error => {
             alert("Lỗi mạng! Thao tác có thể chưa được ghi nhận.");
-            submitBtn.disabled = false;
-            submitBtn.innerText = "Xác nhận gửi";
-            submitBtn.style.backgroundColor = "#001a72";
-            submitBtn.style.color = "#fff";
+            resetButton();
+        });
+    }
+
+    function resetButton() {
+        submitBtn.disabled = false;
+        submitBtn.innerText = "Xác nhận gửi";
+        submitBtn.style.backgroundColor = "#001a72";
+        submitBtn.style.color = "#fff";
+    }
+
+    // XỬ LÝ LOGIC NỘP VÀ QUÉT OCR CHỐNG GIAN LẬN TIMEMARK
+    form.addEventListener('submit', e => {
+        e.preventDefault();
+        
+        if (fileData === "") {
+            showCustomAlert("❌ LỖI TRỐNG ẢNH", "Vui lòng tải lên hình ảnh minh chứng bắt buộc.", "#c90000");
+            return;
+        }
+        
+        // KIỂM TRA THỜI HẠN
+        const ngayInput = document.querySelector('input[name="ngay"]').value;
+        const selDate = new Date(ngayInput);
+        selDate.setHours(0,0,0,0);
+        const now = new Date();
+        const todayDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+        const selMonths = selDate.getFullYear() * 12 + selDate.getMonth();
+        const nowMonths = now.getFullYear() * 12 + now.getMonth();
+
+        if (selMonths < nowMonths && now.getDate() > 3) {
+            showCustomAlert("❌ YÊU CẦU BỊ TỪ CHỐI", "Đã quá hạn nộp phiếu chấm công bổ sung, yêu cầu của bạn không thể thực hiện được.", "#c90000");
+            return; 
+        }
+
+        const diffTime = todayDate.getTime() - selDate.getTime();
+        const diffDays = Math.floor(diffTime / (1000 * 3600 * 24));
+        const isLate = diffDays > 5;
+
+        const maSo = document.getElementById('inputMaNV').value.trim();
+        document.getElementById('hiddenMaNV').value = "AVH" + maSo;
+
+        // BẮT ĐẦU QUÁ TRÌNH QUÉT ẢNH BẰNG AI TESSERACT
+        submitBtn.disabled = true;
+        submitBtn.style.backgroundColor = "#ffc107";
+        submitBtn.style.color = "#000";
+        
+        const fileInput = document.getElementById('fileUpload');
+        const originalFile = fileInput.files[0];
+
+        // Thông báo cho user biết hệ thống đang quét
+        submitBtn.innerText = "🔍 Đang quét xác minh ảnh gốc...";
+
+        Tesseract.recognize(
+            originalFile,
+            'eng+vie', // Quét kết hợp chữ Anh và Việt để tìm watermark
+            { 
+                logger: m => {
+                    if(m.status === 'recognizing text') {
+                        submitBtn.innerText = `🔍 Đang quét xác minh: ${Math.round(m.progress * 100)}%`;
+                    }
+                }
+            }
+        ).then(({ data: { text } }) => {
+            const extractedText = text.toLowerCase();
+            
+            // KIỂM TRA TỪ KHÓA TIMEMARK
+            if (extractedText.includes('timemark')) {
+                // Hợp lệ -> Tiếp tục gửi lên Google Sheets
+                submitBtn.innerText = "✅ Xong! Đang tải lên máy chủ...";
+                submitToGoogleSheets(isLate);
+            } else {
+                // Không hợp lệ -> Chặn lại
+                showCustomAlert("❌ ẢNH KHÔNG HỢP LỆ", "Hình ảnh không hợp lệ về thời gian hoặc đã qua chỉnh sửa. Vui lòng chụp và tải lên trực tiếp từ ứng dụng Timemark.", "#c90000");
+                resetButton();
+            }
+        }).catch(err => {
+            console.error(err);
+            showCustomAlert("⚠️ LỖI QUÉT ẢNH", "Không thể quét được định dạng ảnh này. Vui lòng thử lại với ảnh rõ nét hơn.", "#c90000");
+            resetButton();
         });
     });
 
