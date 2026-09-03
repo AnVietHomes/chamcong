@@ -329,12 +329,12 @@
                     }
                 }
             }
-        ).then(({ data: { text } }) => {
-            const extractedText = text.toLowerCase();
+).then(({ data: { text } }) => {
+            // MẸO CHỐNG NÉN ẢNH ZALO: Xóa toàn bộ khoảng trắng để AI không bị đọc vấp các chữ rời rạc
+            const extractedText = text.toLowerCase().replace(/\s+/g, '');
             
-            // MỞ RỘNG BỘ TỪ KHÓA ĐỂ LÁCH LỖI NÉN ẢNH CỦA ZALO
-            // Quét tìm các biến thể: timemark, time mark, chân thực, verified, 100%
-            const timemarkKeywords = ['timemark', 'time mark', 'chân thực', 'chan thuc', 'verified', '100%'];
+            // Bộ từ khóa đã được viết liền (do khoảng trắng đã bị xóa ở trên)
+            const timemarkKeywords = ['timemark', 'chânthực', 'chanthuc', 'verified', '100%'];
             const isValid = timemarkKeywords.some(keyword => extractedText.includes(keyword));
             
             if (isValid) {
@@ -342,8 +342,8 @@
                 submitBtn.innerText = "✅ Xong! Đang tải lên máy chủ...";
                 submitToGoogleSheets(isLate);
             } else {
-                // Không hợp lệ -> Chặn lại
-                showCustomAlert("❌ ẢNH KHÔNG HỢP LỆ", "Hình ảnh không hợp lệ về thời gian hoặc đã qua chỉnh sửa. Vui lòng chụp và tải lên trực tiếp từ ứng dụng Timemark.", "#c90000");
+                // Không hợp lệ -> Chặn lại (ĐÃ CẬP NHẬT CÂU THÔNG BÁO MỚI)
+                showCustomAlert("❌ ẢNH KHÔNG HỢP LỆ", "Ảnh tải lên không hợp lệ do đã qua chỉnh sửa hoặc không dùng đúng phần mềm chụp Timemark, vui lòng kiểm tra và thực hiện lại đúng yêu cầu.", "#c90000");
                 resetButton();
             }
         }).catch(err => {
