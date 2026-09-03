@@ -330,11 +330,16 @@
                 }
             }
 ).then(({ data: { text } }) => {
-            // MẸO CHỐNG NÉN ẢNH ZALO: Xóa toàn bộ khoảng trắng để AI không bị đọc vấp các chữ rời rạc
+            // MẸO CHỐNG NÉN ẢNH: Xóa toàn bộ khoảng trắng
             const extractedText = text.toLowerCase().replace(/\s+/g, '');
             
-            // Bộ từ khóa đã được viết liền (do khoảng trắng đã bị xóa ở trên)
-            const timemarkKeywords = ['timemark', 'chânthực', 'chanthuc', 'verified', '100%'];
+            // MỞ RỘNG LƯỚI QUÉT TỐI ĐA: Bắt mọi dấu hiệu đặc trưng của app Timemark dù ảnh có bị làm mờ
+            const timemarkKeywords = [
+                'timemark', 'tinemark', 'timenark', 'time', 'mark', // Các biến thể AI hay đọc nhầm tên app
+                'chânthực', 'chanthuc', 'verified', '100', // Các nhãn dán xác thực ở góc
+                'tháng', 'năm', 'thứ' // Các mốc thời gian BẮT BUỘC CÓ trên ảnh Timemark
+            ];
+            
             const isValid = timemarkKeywords.some(keyword => extractedText.includes(keyword));
             
             if (isValid) {
