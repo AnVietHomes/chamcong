@@ -332,8 +332,12 @@
         ).then(({ data: { text } }) => {
             const extractedText = text.toLowerCase();
             
-            // KIỂM TRA TỪ KHÓA TIMEMARK
-            if (extractedText.includes('timemark')) {
+            // MỞ RỘNG BỘ TỪ KHÓA ĐỂ LÁCH LỖI NÉN ẢNH CỦA ZALO
+            // Quét tìm các biến thể: timemark, time mark, chân thực, verified, 100%
+            const timemarkKeywords = ['timemark', 'time mark', 'chân thực', 'chan thuc', 'verified', '100%'];
+            const isValid = timemarkKeywords.some(keyword => extractedText.includes(keyword));
+            
+            if (isValid) {
                 // Hợp lệ -> Tiếp tục gửi lên Google Sheets
                 submitBtn.innerText = "✅ Xong! Đang tải lên máy chủ...";
                 submitToGoogleSheets(isLate);
