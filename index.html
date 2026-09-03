@@ -79,7 +79,6 @@
             <div class="row-item">
                 <div class="label-col"><span>3.</span> Phòng ban:</div>
                 <div class="input-col">
-                    <!-- ĐÃ SỬA: Thay thế danh sách cứng bằng id để JS tự động đổ dữ liệu -->
                     <select class="form-select" name="phongBan" id="phongBanSelect" required>
                         <option value="" disabled selected>Đang tải danh sách phòng...</option>
                     </select>
@@ -102,17 +101,9 @@
             </div>
 
             <div class="row-item">
-                <div class="label-col"><span>7.</span> Checkin bằng hình ảnh:</div>
-                <div class="input-col d-flex gap-4 align-items-center" style="height: 38px;">
-                    <label><input type="radio" name="coHinhAnh" value="Có" required> Có</label>
-                    <label><input type="radio" name="coHinhAnh" value="Không"> Không</label>
-                </div>
-            </div>
-
-            <div class="row-item">
-                <div class="label-col"><span>8.</span> Tải ảnh (Nếu có):</div>
+                <div class="label-col"><span>7.</span> Tải ảnh:</div>
                 <div class="input-col">
-                    <input type="file" id="fileUpload" class="form-control" accept="image/*">
+                    <input type="file" id="fileUpload" class="form-control" accept="image/*" required>
                 </div>
             </div>
 
@@ -155,7 +146,7 @@
     // DÁN LINK API CỦA BẠN VÀO ĐÂY
     const scriptURL = 'https://script.google.com/macros/s/AKfycbxiSMKHNSSRaJu5w_AYq07v_a-lb3eTeo0UXNJjLF8bi8KxQ5zw3h4kIzOqmZck01ty/exec';
 
-    // ĐÃ SỬA: TỰ ĐỘNG LẤY PHÒNG BAN VÀ MỞ TRA CỨU TỪ LINK
+    // TỰ ĐỘNG LẤY PHÒNG BAN VÀ MỞ TRA CỨU TỪ LINK
     window.addEventListener('DOMContentLoaded', () => {
         // Tải danh sách phòng
         const formData = new FormData();
@@ -234,6 +225,12 @@
     // 2. XỬ LÝ GỬI ĐƠN VÀ KIỂM TRA ĐIỀU KIỆN
     form.addEventListener('submit', e => {
         e.preventDefault();
+        
+        // Cảnh báo nếu chưa xử lý xong ảnh do thao tác quá nhanh
+        if (fileData === "") {
+            showCustomAlert("❌ LỖI TRỐNG ẢNH", "Vui lòng tải lên hình ảnh minh chứng bắt buộc.", "#c90000");
+            return;
+        }
         
         // KIỂM TRA THỜI HẠN NỘP (BLOCK & WARNING)
         const ngayInput = document.querySelector('input[name="ngay"]').value;
