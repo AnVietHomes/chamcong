@@ -308,17 +308,19 @@
         const maSo = document.getElementById('inputMaNV').value.trim();
         document.getElementById('hiddenMaNV').value = "AVH" + maSo;
 
-        // BẮT ĐẦU QUÁ TRÌNH QUÉT ẢNH BẰNG AI TESSERACT
+       // BẮT ĐẦU QUÁ TRÌNH QUÉT ẢNH BẰNG AI TESSERACT
         submitBtn.disabled = true;
         submitBtn.style.backgroundColor = "#ffc107";
         submitBtn.style.color = "#000";
         
-        // TỐI ƯU 1: Ép AI quét ảnh base64 đã nén nhẹ (800px) thay vì ảnh gốc khổng lồ để chống treo máy
-        const base64ImageForOCR = 'data:image/jpeg;base64,' + fileData;
+        // LẤY TRỰC TIẾP ẢNH GỐC ĐỂ AI ĐỌC (Không dùng ảnh nén để tránh vỡ pixel)
+        const fileInputOCR = document.getElementById('fileUpload');
+        const originalFileForOCR = fileInputOCR.files[0];
+        
         submitBtn.innerText = "🔍 Đang chuẩn bị AI quét ảnh...";
 
         Tesseract.recognize(
-            base64ImageForOCR,
+            originalFileForOCR,
             'eng+vie',
             { 
                 logger: m => {
