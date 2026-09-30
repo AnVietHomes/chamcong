@@ -10,7 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     
-    <!-- THƯ VIỆN OCR ĐỂ NHẬN DIỆN CHỮ TRÊN ẢNH (CHỐNG GIAN LẬN TIMEMARK) -->
+    <!-- THƯ VIỆN OCR ĐỂ NHẬN DIỆN CHỮ TRÊN ẢNH -->
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 
     <style>
@@ -200,7 +200,7 @@
         document.getElementById('customAlertModal').style.display = 'none';
     }
 
-    // XỬ LÝ ẢNH CLIENT-SIDE
+    // XỬ LÝ ẢNH VÀ NÉN BẰNG CANVAS
     document.getElementById('fileUpload').addEventListener('change', function(e) {
         const file = e.target.files[0];
         if(!file) {
@@ -232,7 +232,7 @@
     // HÀM TIẾN HÀNH GỬI DỮ LIỆU LÊN MÁY CHỦ
     function submitToGoogleSheets(isLate) {
         const formData = new FormData(form);
-        formData.append('coHinhAnh', 'Có'); // Mặc định gửi biến Có vì giờ là bắt buộc
+        formData.append('coHinhAnh', 'Có'); 
         formData.append('fileData', fileData);
         formData.append('fileMimeType', fileMimeType);
 
@@ -245,7 +245,7 @@
                 submitBtn.style.color = "#fff";
                 
                 if(isLate) {
-                    showCustomAlert("⚠️ NỘP TRỄ HẠN", "Nộp phiếu thành công, nhưng do đã quá thời hạn 5 ngày theo quy định nên phiếu của bạn có thể bị HCNS trả lại hoặc không phê duyệt.", "#c90000");
+                    showCustomAlert("⚠️️ NỘP TRỄ HẠN", "Nộp phiếu thành công, nhưng do đã quá thời hạn 5 ngày theo quy định nên phiếu của bạn có thể bị HCNS trả lại hoặc không phê duyệt.", "#c90000");
                 } else {
                     showCustomAlert("✅ XÁC MINH HOÀN TẤT", "Đã gửi phiếu chấm công và tải ảnh thành công!", "#28a745");
                 }
@@ -313,15 +313,13 @@
         submitBtn.style.backgroundColor = "#ffc107";
         submitBtn.style.color = "#000";
         
-        const fileInput = document.getElementById('fileUpload');
-        const originalFile = fileInput.files[0];
-
-        // Thông báo cho user biết hệ thống đang quét
-        submitBtn.innerText = "🔍 Đang quét xác minh ảnh gốc...";
+        // TỐI ƯU 1: Ép AI quét ảnh base64 đã nén nhẹ (800px) thay vì ảnh gốc khổng lồ để chống treo máy
+        const base64ImageForOCR = 'data:image/jpeg;base64,' + fileData;
+        submitBtn.innerText = "🔍 Đang chuẩn bị AI quét ảnh...";
 
         Tesseract.recognize(
-            originalFile,
-            'eng+vie', // Quét kết hợp chữ Anh và Việt để tìm watermark
+            base64ImageForOCR,
+            'eng+vie',
             { 
                 logger: m => {
                     if(m.status === 'recognizing text') {
@@ -329,31 +327,35 @@
                     }
                 }
             }
-).then(({ data: { text } }) => {
-            // MẸO CHỐNG NÉN ẢNH: Xóa toàn bộ khoảng trắng
-            const extractedText = text.toLowerCase().replace(/\s+/g, '');
+        ).then(({ data: { text } }) => {
+            // TỐI ƯU 2: Thuật toán lọc chữ hoàn hảo
+            // Xóa toàn bộ dấu tiếng Việt (AI hay đọc nhầm), chuyển 'đ' thành 'd' và xóa mọi khoảng trắng
+            const cleanText = text.toLowerCase()
+                                  .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // Xóa sạch dấu
+                                  .replace(/đ/g, "d") // Ép chữ đ thành d
+                                  .replace(/[^a-z0-9]/g, ''); // Bỏ toàn bộ khoảng trắng và ký tự lạ
             
-            // MỞ RỘNG LƯỚI QUÉT TỐI ĐA: Bắt mọi dấu hiệu đặc trưng của app Timemark dù ảnh có bị làm mờ
-            const timemarkKeywords = [
-                'timemark', 'tinemark', 'timenark', 'time', 'mark', // Các biến thể AI hay đọc nhầm tên app
-                'chânthực', 'chanthuc', 'verified', '100', // Các nhãn dán xác thực ở góc
-                'tháng', 'năm', 'thứ' // Các mốc thời gian BẮT BUỘC CÓ trên ảnh Timemark
+            // TỐI ƯU 3: Bộ từ khóa siêu đặc trưng
+            const strongKeywords = [
+                'timemark', 'tinemark', 'timenark',
+                'diemdanh', // Bắt cụm "Điểm danh" màu vàng
+                'chanthuc', // Bắt cụm "Chân thực"
+                'camket',   // Bắt cụm "Cam kết ngày giờ"
+                'verified'
             ];
             
-            const isValid = timemarkKeywords.some(keyword => extractedText.includes(keyword));
+            const isValid = strongKeywords.some(keyword => cleanText.includes(keyword));
             
             if (isValid) {
-                // Hợp lệ -> Tiếp tục gửi lên Google Sheets
                 submitBtn.innerText = "✅ Xong! Đang tải lên máy chủ...";
                 submitToGoogleSheets(isLate);
             } else {
-                // Không hợp lệ -> Chặn lại (ĐÃ CẬP NHẬT CÂU THÔNG BÁO MỚI)
                 showCustomAlert("❌ ẢNH KHÔNG HỢP LỆ", "Ảnh tải lên không hợp lệ do đã qua chỉnh sửa hoặc không dùng đúng phần mềm chụp Timemark, vui lòng kiểm tra và thực hiện lại đúng yêu cầu.", "#c90000");
                 resetButton();
             }
         }).catch(err => {
             console.error(err);
-            showCustomAlert("⚠️ LỖI QUÉT ẢNH", "Không thể quét được định dạng ảnh này. Vui lòng thử lại với ảnh rõ nét hơn.", "#c90000");
+            showCustomAlert("⚠️ LỖI QUÉT ẢNH", "Hệ thống không thể quét được ảnh này. Vui lòng chụp rõ nét hơn.", "#c90000");
             resetButton();
         });
     });
