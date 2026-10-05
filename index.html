@@ -318,7 +318,6 @@
     // ==========================================
     const scriptURL = 'https://script.google.com/macros/s/AKfycbxiSMKHNSSRaJu5w_AYq07v_a-lb3eTeo0UXNJjLF8bi8KxQ5zw3h4kIzOqmZck01ty/exec';
 
-    // MỞ BẢNG TRA CỨU TỰ ĐỘNG
     function checkAndOpenTracuu() {
         if (window.location.hash === '#tracuu' || window.location.search.includes('view=tracuu')) {
             setTimeout(() => { openModal(); }, 100);
@@ -355,14 +354,11 @@
     let fileData = "";
     let fileMimeType = "";
 
-    // HÀM HIỂN THỊ POPUP THÔNG BÁO TÙY CHỈNH
     function showCustomAlert(title, msg, color) {
         document.getElementById('customAlertTitle').innerText = title;
         document.getElementById('customAlertTitle').style.color = color;
-        
         document.getElementById('customAlertMessage').innerText = msg;
         document.getElementById('customAlertMessage').style.color = (color === "#c90000") ? "#c90000" : "#333";
-        
         document.getElementById('customAlertModal').style.display = 'flex';
     }
 
@@ -370,13 +366,11 @@
         document.getElementById('customAlertModal').style.display = 'none';
     }
 
-    // XỬ LÝ ẢNH BÊN CLIENT ĐỂ GỬI GOOGLE SHEETS
+    // XỬ LÝ ẢNH CLIENT ĐỂ NÉN GỬI GOOGLE SHEETS
     document.getElementById('fileUpload').addEventListener('change', function(e) {
         const file = e.target.files[0];
         if(!file) { 
-            fileData = ""; 
-            fileMimeType = ""; 
-            return; 
+            fileData = ""; fileMimeType = ""; return; 
         }
         
         const reader = new FileReader();
@@ -384,7 +378,7 @@
             const img = new Image();
             img.onload = function() {
                 const canvas = document.createElement('canvas');
-                const MAX_WIDTH = 800; // Nén ảnh xuống 800px để gửi cho nhẹ máy chủ
+                const MAX_WIDTH = 800; 
                 const scaleSize = MAX_WIDTH / img.width;
                 canvas.width = MAX_WIDTH;
                 canvas.height = img.height * scaleSize;
@@ -401,7 +395,7 @@
         reader.readAsDataURL(file);
     });
 
-    // HÀM TIẾN HÀNH GỬI DỮ LIỆU LÊN MÁY CHỦ
+    // HÀM GỬI LÊN SHEET SAU KHI VƯỢT QUA AI
     function submitToGoogleSheets(isLate) {
         const formData = new FormData(form);
         formData.append('coHinhAnh', 'Có'); 
@@ -423,21 +417,15 @@
                 }
 
                 setTimeout(() => {
-                    form.reset(); 
-                    fileData = ""; 
-                    fileMimeType = ""; 
+                    form.reset(); fileData = ""; fileMimeType = ""; 
                     document.getElementById('fileUpload').value = ""; 
                     resetButton();
                 }, 2000); 
             } else {
-                alert("Lỗi từ hệ thống: " + data.message); 
-                resetButton();
+                alert("Lỗi từ hệ thống: " + data.message); resetButton();
             }
         })
-        .catch(error => { 
-            alert("Lỗi mạng! Thao tác có thể chưa được ghi nhận."); 
-            resetButton(); 
-        });
+        .catch(error => { alert("Lỗi mạng! Thao tác có thể chưa được ghi nhận."); resetButton(); });
     }
 
     function resetButton() {
@@ -447,29 +435,26 @@
         submitBtn.style.color = "#fff";
     }
 
-    // XỬ LÝ QUÉT KÉP: METADATA EXIF (LỚP 1) -> AI OCR (LỚP 2)
+    // ==========================================
+    // QUÉT KÉP: METADATA EXIF & KHOÉT RỖNG TÂM ẢNH
+    // ==========================================
     form.addEventListener('submit', e => {
         e.preventDefault();
         
         if (fileData === "") {
-            showCustomAlert("❌ LỖI TRỐNG ẢNH", "Vui lòng tải lên hình ảnh minh chứng bắt buộc.", "#c90000"); 
-            return;
+            showCustomAlert("❌ LỖI TRỐNG ẢNH", "Vui lòng tải lên hình ảnh minh chứng bắt buộc.", "#c90000"); return;
         }
         
         const ngayInput = document.querySelector('input[name="ngay"]').value;
-        const selDate = new Date(ngayInput); 
-        selDate.setHours(0,0,0,0);
-        
-        const now = new Date(); 
-        const todayDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const selDate = new Date(ngayInput); selDate.setHours(0,0,0,0);
+        const now = new Date(); const todayDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
         const selMonths = selDate.getFullYear() * 12 + selDate.getMonth();
         const nowMonths = now.getFullYear() * 12 + now.getMonth();
 
         // ĐIỀU KIỆN HARD BLOCK
         if (selMonths < nowMonths && now.getDate() > 3) {
-            showCustomAlert("❌ YÊU CẦU BỊ TỪ CHỐI", "Đã quá hạn nộp phiếu chấm công bổ sung, yêu cầu của bạn không thể thực hiện được.", "#c90000"); 
-            return; 
+            showCustomAlert("❌ YÊU CẦU BỊ TỪ CHỐI", "Đã quá hạn nộp phiếu chấm công bổ sung.", "#c90000"); return; 
         }
 
         const diffTime = todayDate.getTime() - selDate.getTime();
@@ -485,19 +470,19 @@
         
         submitBtn.innerText = "🔍 Đang truy xuất Metadata ảnh...";
 
-        // LỚP 1: QUÉT METADATA SIÊU TỐC
+        // LỚP 1: QUÉT METADATA
         EXIF.getData(originalFileForOCR, function() {
             const software = EXIF.getTag(this, "Software") || "";
             const make = EXIF.getTag(this, "Make") || "";
             const allExif = String(software + " " + make).toLowerCase();
 
             if (allExif.includes("timemark")) {
-                // Đọc được MetaData gốc -> Qua luôn không cần quét AI
                 submitBtn.innerText = "✅ Quét Metadata thành công! Đang tải lên...";
                 submitToGoogleSheets(isLate);
             } else {
-                // LỚP 2: NẾU ẢNH QUA ZALO MẤT METADATA -> BẬT AI OCR
-                submitBtn.innerText = "🔍 Kích hoạt AI quét ảnh nén...";
+                
+                // LỚP 2: TÁCH NỀN VÀ KHOÉT RỖNG TÂM ẢNH OCR
+                submitBtn.innerText = "🔍 Kích hoạt AI quét khung viền ảnh...";
                 
                 const readerOCR = new FileReader();
                 readerOCR.onload = function(event) {
@@ -507,46 +492,73 @@
                         const canvasOCR = document.createElement('canvas');
                         const ctxOCR = canvasOCR.getContext('2d');
                         
-                        // Cắt lấy 40% đáy ảnh. Tuyệt đối KHÔNG sử dụng grayscale hay contrast để tránh hỏng màu nguyên bản
-                        const cropHeight = imgObj.height * 0.40; 
-                        const cropY = imgObj.height - cropHeight;
+                        // Nén bề mặt ảnh để AI quét siêu tốc
+                        const MAX_OCR_WIDTH = 800; 
+                        const scaleOCR = Math.min(1, MAX_OCR_WIDTH / img.width);
+                        canvasOCR.width = img.width * scaleOCR;
+                        canvasOCR.height = img.height * scaleOCR;
                         
-                        canvasOCR.width = imgObj.width;
-                        canvasOCR.height = cropHeight;
+                        // Vẽ toàn bộ bức ảnh lên Canvas
+                        ctxOCR.drawImage(imgObj, 0, 0, canvasOCR.width, canvasOCR.height);
                         
-                        ctxOCR.drawImage(imgObj, 0, cropY, imgObj.width, cropHeight, 0, 0, canvasOCR.width, canvasOCR.height);
-                        const ocrBase64 = canvasOCR.toDataURL('image/jpeg', 1.0); // Giữ chất lượng tối đa
+                        // THUẬT TOÁN KHOÉT RỖNG TÂM ẢNH (CHỈ CHỪA LẠI VIỀN XUNG QUANH)
+                        // Giữ lại Lề trên 15%, Lề đáy 30%, Lề trái 15%, Lề phải 15%
+                        const maskX = canvasOCR.width * 0.15;
+                        const maskY = canvasOCR.height * 0.15;
+                        const maskW = canvasOCR.width * 0.70;
+                        const maskH = canvasOCR.height * 0.55;
+                        
+                        // Tô trắng tinh phần trung tâm ảnh
+                        ctxOCR.fillStyle = "#ffffff";
+                        ctxOCR.fillRect(maskX, maskY, maskW, maskH);
+                        
+                        // TÁCH NỀN (Binarization): Biến chữ trắng/vàng thành đen, xóa tạp âm thành trắng
+                        const imageData = ctxOCR.getImageData(0, 0, canvasOCR.width, canvasOCR.height);
+                        const data = imageData.data;
+                        
+                        for (let i = 0; i < data.length; i += 4) {
+                            const r = data[i]; const g = data[i+1]; const b = data[i+2];
+                            
+                            // Phổ màu chữ Trắng sáng (hoặc hơi xám)
+                            const isWhite = (r > 190 && g > 190 && b > 190);
+                            // Phổ màu chữ Vàng chanh / Cam nhạt (Logo Timemark)
+                            const isYellow = (r > 170 && g > 140 && b < 130);
+                            
+                            if (isWhite || isYellow) {
+                                // Biến chữ thành màu ĐEN
+                                data[i] = 0; data[i+1] = 0; data[i+2] = 0;
+                            } else {
+                                // Biến mọi rác nền còn lại thành TRẮNG
+                                data[i] = 255; data[i+1] = 255; data[i+2] = 255;
+                            }
+                        }
+                        ctxOCR.putImageData(imageData, 0, 0);
+                        
+                        const ocrBase64 = canvasOCR.toDataURL('image/jpeg', 0.9); 
                         
                         Tesseract.recognize(
                             ocrBase64,
                             'eng+vie',
-                            { 
-                                logger: m => { 
-                                    if(m.status === 'recognizing text') {
-                                        submitBtn.innerText = `🔍 AI Đang phân tích: ${Math.round(m.progress * 100)}%`; 
-                                    }
-                                } 
-                            }
+                            { logger: m => { if(m.status === 'recognizing text') submitBtn.innerText = `🔍 AI Đang phân tích viền: ${Math.round(m.progress * 100)}%`; } }
                         ).then(({ data: { text } }) => {
                             
-                            // Tẩy rửa chữ để chấm điểm
+                            // Tẩy sạch dấu câu tiếng việt
                             const cleanText = text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d");
                             const noSpaceText = cleanText.replace(/[^a-z0-9:]/g, ''); 
-                            
                             let score = 0;
                             
-                            // Các từ khóa đặc quyền
+                            // Tính điểm dựa trên từ khóa không cần nguyên vẹn
                             const vipKeywords = ['timemark', 'tinemark', 'timenark', 'diemdanh', 'chanthuc', 'camket', 'verified'];
                             if (vipKeywords.some(kw => noSpaceText.includes(kw))) score += 100;
                             
-                            if (/\d{1,2}:\d{2}/.test(noSpaceText)) score += 50; // Quét giờ
-                            
+                            if (/\d{1,2}:\d{2}/.test(noSpaceText)) score += 50; 
                             const dateKeywords = ['thang', 'nam', 'thu', 'ngay', '2026', '2025'];
-                            if (dateKeywords.some(kw => noSpaceText.includes(kw))) score += 50; // Quét ngày
+                            if (dateKeywords.some(kw => noSpaceText.includes(kw))) score += 50; 
                             
                             const locationKeywords = ['phuong', 'quan', 'thanhpho', 'tinh', 'quoc', 'viet'];
-                            if (locationKeywords.some(kw => noSpaceText.includes(kw))) score += 50; // Quét địa điểm
+                            if (locationKeywords.some(kw => noSpaceText.includes(kw))) score += 50; 
                             
+                            // Chỉ cần >= 100 điểm là vượt qua
                             if (score >= 100) {
                                 submitBtn.innerText = "✅ AI Xác minh xong! Đang tải...";
                                 submitToGoogleSheets(isLate);
@@ -556,7 +568,7 @@
                             }
                         }).catch(err => {
                             console.error(err);
-                            showCustomAlert("⚠️ LỖI QUÉT ẢNH", "Hệ thống AI quá tải do ảnh. Vui lòng tải lại trang và thử lại.", "#c90000");
+                            showCustomAlert("⚠️ LỖI QUÉT ẢNH", "Hệ thống AI quá tải. Vui lòng tải lại trang và thử lại.", "#c90000");
                             resetButton();
                         });
                     };
@@ -567,66 +579,36 @@
         });
     });
 
-    // CÁC HÀM TRA CỨU LỊCH SỬ
-    function openModal() { 
-        document.getElementById('searchModal').style.display = 'flex'; 
-    }
-    
-    function closeModal() { 
-        document.getElementById('searchModal').style.display = 'none'; 
-        document.getElementById('resultContainer').innerHTML = ''; 
-        document.getElementById('searchForm').reset(); 
-    }
+    // CÁC HÀM TRA CỨU
+    function openModal() { document.getElementById('searchModal').style.display = 'flex'; }
+    function closeModal() { document.getElementById('searchModal').style.display = 'none'; document.getElementById('resultContainer').innerHTML = ''; document.getElementById('searchForm').reset(); }
 
     document.getElementById('searchForm').addEventListener('submit', function(e) {
         e.preventDefault();
-        
-        const btn = document.getElementById('btnSearch'); 
-        const resContainer = document.getElementById('resultContainer');
-        
-        btn.innerText = "ĐANG TÌM..."; 
-        btn.disabled = true; 
-        resContainer.innerHTML = '<p class="text-center mt-3">Đang truy xuất dữ liệu...</p>';
+        const btn = document.getElementById('btnSearch'); const resContainer = document.getElementById('resultContainer');
+        btn.innerText = "ĐANG TÌM..."; btn.disabled = true; resContainer.innerHTML = '<p class="text-center mt-3">Đang truy xuất dữ liệu...</p>';
 
         const formData = new FormData();
-        formData.append('action', 'searchHistory'); 
-        formData.append('name', document.getElementById('searchName').value); 
-        formData.append('maNV', "AVH" + document.getElementById('searchMaNV').value.trim()); 
+        formData.append('action', 'searchHistory'); formData.append('name', document.getElementById('searchName').value); formData.append('maNV', "AVH" + document.getElementById('searchMaNV').value.trim()); 
 
         fetch(scriptURL, { method: 'POST', body: formData })
             .then(res => res.json())
             .then(data => {
-                btn.innerText = "KIỂM TRA"; 
-                btn.disabled = false;
-                
+                btn.innerText = "KIỂM TRA"; btn.disabled = false;
                 if(data.status === "success" && data.data.length > 0) {
                     let html = '<ul class="list-group mt-3">';
                     data.data.forEach(item => {
-                        let badgeColor = "bg-warning text-dark"; // Mặc định chờ duyệt
-                        if (item.trangThai === "Đã hoàn thành") {
-                            badgeColor = "bg-success";
-                        } else if (item.trangThai === "Từ chối" || item.trangThai === "HCNS Trả lại") {
-                            badgeColor = "bg-danger";
-                        }
+                        let badgeColor = "bg-warning text-dark"; 
+                        if (item.trangThai === "Đã hoàn thành") badgeColor = "bg-success";
+                        else if (item.trangThai === "Từ chối" || item.trangThai === "HCNS Trả lại") badgeColor = "bg-danger";
                         
-                        html += `
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <div>
-                                <strong>${item.ngay}</strong><br>
-                                <span class="text-muted">${item.lyDo}</span>
-                            </div>
-                            <span class="badge ${badgeColor}">${item.trangThai}</span>
-                        </li>`;
+                        html += `<li class="list-group-item d-flex justify-content-between align-items-center"><div><strong>${item.ngay}</strong><br><span class="text-muted">${item.lyDo}</span></div><span class="badge ${badgeColor}">${item.trangThai}</span></li>`;
                     });
                     resContainer.innerHTML = html + '</ul>';
                 } else {
                     resContainer.innerHTML = '<p class="text-center text-danger mt-3 fw-bold">Không tìm thấy dữ liệu khớp với thông tin!</p>';
                 }
-            }).catch(err => { 
-                btn.innerText = "KIỂM TRA"; 
-                btn.disabled = false; 
-                resContainer.innerHTML = '<p class="text-center text-danger mt-3">Lỗi kết nối!</p>'; 
-            });
+            }).catch(err => { btn.innerText = "KIỂM TRA"; btn.disabled = false; resContainer.innerHTML = '<p class="text-center text-danger mt-3">Lỗi kết nối!</p>'; });
     });
 </script>
 
