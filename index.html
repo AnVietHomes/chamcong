@@ -10,41 +10,198 @@
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     
-    <!-- THƯ VIỆN OCR ĐỂ NHẬN DIỆN CHỮ TRÊN ẢNH -->
+    <!-- THƯ VIỆN AI OCR ĐỂ QUÉT CHỮ -->
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    
+    <!-- THƯ VIỆN THÂM NHẬP METADATA ẢNH -->
+    <script src="https://cdn.jsdelivr.net/npm/exif-js"></script>
 
     <style>
-        body { background-color: #dcf0fa; font-family: 'Manrope', sans-serif; color: #111; }
-        .top-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 40px; }
-        .company-info { display: flex; align-items: center; gap: 15px; }
-        .company-info img { height: 50px; }
-        .company-name { font-weight: 600; font-size: 14px; text-transform: uppercase; color: #111; line-height: 1.4; max-width: 300px;}
-        .btn-check-status { background-color: #001a72; color: #fff; border-radius: 30px; padding: 10px 25px; font-weight: 600; font-size: 14px; border: none; transition: 0.3s; }
-        .btn-check-status:hover { background-color: #00104a; color: #fff; }
+        body { 
+            background-color: #dcf0fa; 
+            font-family: 'Manrope', sans-serif; 
+            color: #111; 
+        }
+        .top-header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            padding: 20px 40px; 
+        }
+        .company-info { 
+            display: flex; 
+            align-items: center; 
+            gap: 15px; 
+        }
+        .company-info img { 
+            height: 50px; 
+        }
+        .company-name { 
+            font-weight: 600; 
+            font-size: 14px; 
+            text-transform: uppercase; 
+            color: #111; 
+            line-height: 1.4; 
+            max-width: 300px;
+        }
+        .btn-check-status { 
+            background-color: #001a72; 
+            color: #fff; 
+            border-radius: 30px; 
+            padding: 10px 25px; 
+            font-weight: 600; 
+            font-size: 14px; 
+            border: none; 
+            transition: 0.3s; 
+        }
+        .btn-check-status:hover { 
+            background-color: #00104a; 
+            color: #fff; 
+        }
 
-        .form-container { background: #fff; max-width: 800px; margin: 20px auto 50px; padding: 40px 60px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
-        .form-title { text-align: center; font-weight: 800; font-size: 26px; margin-bottom: 40px; text-transform: uppercase; }
+        .form-container { 
+            background: #fff; 
+            max-width: 800px; 
+            margin: 20px auto 50px; 
+            padding: 40px 60px; 
+            border-radius: 12px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05); 
+        }
+        .form-title { 
+            text-align: center; 
+            font-weight: 800; 
+            font-size: 26px; 
+            margin-bottom: 40px; 
+            text-transform: uppercase; 
+        }
         
-        .row-item { display: flex; align-items: center; margin-bottom: 15px; }
-        .row-item .label-col { width: 40%; font-weight: 500; font-size: 16px; display: flex; gap: 15px;}
-        .row-item .input-col { width: 60%; }
-        .form-control, .form-select { border: none; border-bottom: 1px solid #ccc; border-radius: 0; padding: 5px 0; font-family: 'Manrope', sans-serif; font-size: 16px;}
-        .form-control:focus, .form-select:focus { box-shadow: none; border-bottom: 2px solid #001a72; background: transparent; }
+        .row-item { 
+            display: flex; 
+            align-items: center; 
+            margin-bottom: 15px; 
+        }
+        .row-item .label-col { 
+            width: 40%; 
+            font-weight: 500; 
+            font-size: 16px; 
+            display: flex; 
+            gap: 15px;
+        }
+        .row-item .input-col { 
+            width: 60%; 
+        }
+        .form-control, .form-select { 
+            border: none; 
+            border-bottom: 1px solid #ccc; 
+            border-radius: 0; 
+            padding: 5px 0; 
+            font-family: 'Manrope', sans-serif; 
+            font-size: 16px;
+        }
+        .form-control:focus, .form-select:focus { 
+            box-shadow: none; 
+            border-bottom: 2px solid #001a72; 
+            background: transparent; 
+        }
         
-        .btn-submit { background-color: #001a72; color: #fff; border-radius: 30px; padding: 12px 40px; font-weight: 700; border: none; margin-top: 30px; display: block; margin-left: auto; margin-right: auto;}
+        .btn-submit { 
+            background-color: #001a72; 
+            color: #fff; 
+            border-radius: 30px; 
+            padding: 12px 40px; 
+            font-weight: 700; 
+            border: none; 
+            margin-top: 30px; 
+            display: block; 
+            margin-left: auto; 
+            margin-right: auto;
+        }
         
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(220, 240, 250, 0.85); backdrop-filter: blur(5px); display: none; justify-content: center; align-items: center; z-index: 1000; }
-        .modal-box { background: #fff; width: 450px; padding: 40px; border-radius: 16px; box-shadow: 0 15px 40px rgba(0,0,0,0.1); position: relative; }
-        .modal-title { text-align: center; font-weight: 800; color: #001a72; font-size: 20px; margin-bottom: 30px; text-transform: uppercase; }
-        .close-btn { position: absolute; top: 15px; right: 20px; font-size: 24px; cursor: pointer; color: #999; }
+        .modal-overlay { 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            background: rgba(220, 240, 250, 0.85); 
+            backdrop-filter: blur(5px); 
+            display: none; 
+            justify-content: center; 
+            align-items: center; 
+            z-index: 1000; 
+        }
+        .modal-box { 
+            background: #fff; 
+            width: 450px; 
+            padding: 40px; 
+            border-radius: 16px; 
+            box-shadow: 0 15px 40px rgba(0,0,0,0.1); 
+            position: relative; 
+        }
+        .modal-title { 
+            text-align: center; 
+            font-weight: 800; 
+            color: #001a72; 
+            font-size: 20px; 
+            margin-bottom: 30px; 
+            text-transform: uppercase; 
+        }
+        .close-btn { 
+            position: absolute; 
+            top: 15px; 
+            right: 20px; 
+            font-size: 24px; 
+            cursor: pointer; 
+            color: #999; 
+        }
         
-        .input-group-custom { display: flex; align-items: center; border: 1px solid #ccc; border-radius: 6px; overflow: hidden; margin-bottom: 20px; background: #fff;}
-        .input-group-custom .prefix { background-color: #001a72; color: white; padding: 8px 15px; font-weight: 700; font-size: 15px;}
-        .input-group-custom input { border: none; padding: 8px 10px; width: 100%; outline: none; font-size: 15px; font-family: 'Manrope', sans-serif;}
+        .input-group-custom { 
+            display: flex; 
+            align-items: center; 
+            border: 1px solid #ccc; 
+            border-radius: 6px; 
+            overflow: hidden; 
+            margin-bottom: 20px; 
+            background: #fff;
+        }
+        .input-group-custom .prefix { 
+            background-color: #001a72; 
+            color: white; 
+            padding: 8px 15px; 
+            font-weight: 700; 
+            font-size: 15px;
+        }
+        .input-group-custom input { 
+            border: none; 
+            padding: 8px 10px; 
+            width: 100%; 
+            outline: none; 
+            font-size: 15px; 
+            font-family: 'Manrope', sans-serif;
+        }
         
-        .custom-input-label { font-size: 12px; font-weight: 600; margin-bottom: 5px; color: #333; }
-        .btn-search { background-color: #001a72; color: #fff; border-radius: 30px; padding: 10px; width: 100%; font-weight: 700; border: none; margin-top: 10px; }
-        #resultContainer { margin-top: 20px; max-height: 200px; overflow-y: auto; font-size: 13px;}
+        .custom-input-label { 
+            font-size: 12px; 
+            font-weight: 600; 
+            margin-bottom: 5px; 
+            color: #333; 
+        }
+        .btn-search { 
+            background-color: #001a72; 
+            color: #fff; 
+            border-radius: 30px; 
+            padding: 10px; 
+            width: 100%; 
+            font-weight: 700; 
+            border: none; 
+            margin-top: 10px; 
+        }
+        #resultContainer { 
+            margin-top: 20px; 
+            max-height: 200px; 
+            overflow-y: auto; 
+            font-size: 13px;
+        }
     </style>
 </head>
 <body>
@@ -66,7 +223,9 @@
 
             <div class="row-item">
                 <div class="label-col"><span>1.</span> Họ và tên:</div>
-                <div class="input-col"><input type="text" class="form-control" name="hoTen" required placeholder="Nguyễn Văn A"></div>
+                <div class="input-col">
+                    <input type="text" class="form-control" name="hoTen" required placeholder="Nguyễn Văn A">
+                </div>
             </div>
 
             <div class="row-item">
@@ -91,17 +250,23 @@
 
             <div class="row-item">
                 <div class="label-col"><span>4.</span> Ngày:</div>
-                <div class="input-col"><input type="date" class="form-control" name="ngay" required></div>
+                <div class="input-col">
+                    <input type="date" class="form-control" name="ngay" required>
+                </div>
             </div>
 
             <div class="row-item">
                 <div class="label-col"><span>5.</span> Giờ checkin/ checkout:</div>
-                <div class="input-col"><input type="text" class="form-control" name="gio" required placeholder="08:45"></div>
+                <div class="input-col">
+                    <input type="text" class="form-control" name="gio" required placeholder="08:45">
+                </div>
             </div>
 
             <div class="row-item">
                 <div class="label-col"><span>6.</span> Lý do:</div>
-                <div class="input-col"><input type="text" class="form-control" name="lyDo" required placeholder="Gặp khách hàng..."></div>
+                <div class="input-col">
+                    <input type="text" class="form-control" name="lyDo" required placeholder="Gặp khách hàng...">
+                </div>
             </div>
 
             <div class="row-item">
@@ -116,7 +281,7 @@
     </div>
 </div>
 
-<!-- POPUP THÔNG BÁO TÙY CHỈNH -->
+<!-- POPUP THÔNG BÁO -->
 <div class="modal-overlay" id="customAlertModal">
     <div class="modal-box text-center" style="width: 420px; padding: 40px 30px;">
         <span class="close-btn" onclick="closeCustomAlert()">&times;</span>
@@ -126,6 +291,7 @@
     </div>
 </div>
 
+<!-- POPUP TRA CỨU -->
 <div class="modal-overlay" id="searchModal">
     <div class="modal-box">
         <span class="close-btn" onclick="closeModal()">&times;</span>
@@ -147,19 +313,23 @@
 </div>
 
 <script>
-    // DÁN LINK API CỦA BẠN VÀO ĐÂY
+    // ==========================================
+    // DÁN LINK API WEB APP VÀO ĐÂY
+    // ==========================================
     const scriptURL = 'https://script.google.com/macros/s/AKfycbxiSMKHNSSRaJu5w_AYq07v_a-lb3eTeo0UXNJjLF8bi8KxQ5zw3h4kIzOqmZck01ty/exec';
 
-    // LẤY PHÒNG BAN VÀ MỞ TRA CỨU
+    // MỞ BẢNG TRA CỨU TỰ ĐỘNG
     function checkAndOpenTracuu() {
         if (window.location.hash === '#tracuu' || window.location.search.includes('view=tracuu')) {
             setTimeout(() => { openModal(); }, 100);
         }
     }
 
+    // TẢI DANH SÁCH PHÒNG BAN TỪ GOOGLE SHEET
     window.addEventListener('DOMContentLoaded', () => {
         const formData = new FormData();
         formData.append('action', 'getDepartments');
+        
         fetch(scriptURL, { method: 'POST', body: formData })
         .then(res => res.json())
         .then(data => {
@@ -170,7 +340,8 @@
                     select.innerHTML += `<option value="${dept}">Phòng ${dept}</option>`;
                 });
             }
-        }).catch(err => console.log("Lỗi tải phòng ban:", err));
+        })
+        .catch(err => console.log("Lỗi tải phòng ban:", err));
 
         checkAndOpenTracuu();
     });
@@ -184,15 +355,14 @@
     let fileData = "";
     let fileMimeType = "";
 
+    // HÀM HIỂN THỊ POPUP THÔNG BÁO TÙY CHỈNH
     function showCustomAlert(title, msg, color) {
         document.getElementById('customAlertTitle').innerText = title;
         document.getElementById('customAlertTitle').style.color = color;
+        
         document.getElementById('customAlertMessage').innerText = msg;
-        if (color === "#c90000") {
-            document.getElementById('customAlertMessage').style.color = "#c90000";
-        } else {
-            document.getElementById('customAlertMessage').style.color = "#333";
-        }
+        document.getElementById('customAlertMessage').style.color = (color === "#c90000") ? "#c90000" : "#333";
+        
         document.getElementById('customAlertModal').style.display = 'flex';
     }
 
@@ -200,11 +370,13 @@
         document.getElementById('customAlertModal').style.display = 'none';
     }
 
-    // XỬ LÝ ẢNH VÀ NÉN BẰNG CANVAS
+    // XỬ LÝ ẢNH BÊN CLIENT ĐỂ GỬI GOOGLE SHEETS
     document.getElementById('fileUpload').addEventListener('change', function(e) {
         const file = e.target.files[0];
-        if(!file) {
-            fileData = ""; fileMimeType = ""; return;
+        if(!file) { 
+            fileData = ""; 
+            fileMimeType = ""; 
+            return; 
         }
         
         const reader = new FileReader();
@@ -212,7 +384,7 @@
             const img = new Image();
             img.onload = function() {
                 const canvas = document.createElement('canvas');
-                const MAX_WIDTH = 800;
+                const MAX_WIDTH = 800; // Nén ảnh xuống 800px để gửi cho nhẹ máy chủ
                 const scaleSize = MAX_WIDTH / img.width;
                 canvas.width = MAX_WIDTH;
                 canvas.height = img.height * scaleSize;
@@ -245,28 +417,26 @@
                 submitBtn.style.color = "#fff";
                 
                 if(isLate) {
-                    showCustomAlert("⚠️️ NỘP TRỄ HẠN", "Nộp phiếu thành công, nhưng do đã quá thời hạn 5 ngày theo quy định nên phiếu của bạn có thể bị HCNS trả lại hoặc không phê duyệt.", "#c90000");
+                    showCustomAlert("⚠ NỘP TRỄ HẠN", "Nộp phiếu thành công, nhưng do đã quá thời hạn 5 ngày theo quy định nên phiếu của bạn có thể bị HCNS trả lại hoặc không phê duyệt.", "#c90000");
                 } else {
                     showCustomAlert("✅ XÁC MINH HOÀN TẤT", "Đã gửi phiếu chấm công và tải ảnh thành công!", "#28a745");
                 }
 
                 setTimeout(() => {
-                    form.reset();
-                    fileData = "";
-                    fileMimeType = "";
+                    form.reset(); 
+                    fileData = ""; 
+                    fileMimeType = ""; 
                     document.getElementById('fileUpload').value = ""; 
-                    submitBtn.disabled = false;
-                    submitBtn.innerText = "Xác nhận gửi";
-                    submitBtn.style.backgroundColor = "#001a72";
+                    resetButton();
                 }, 2000); 
             } else {
-                alert("Lỗi từ hệ thống: " + data.message);
+                alert("Lỗi từ hệ thống: " + data.message); 
                 resetButton();
             }
         })
-        .catch(error => {
-            alert("Lỗi mạng! Thao tác có thể chưa được ghi nhận.");
-            resetButton();
+        .catch(error => { 
+            alert("Lỗi mạng! Thao tác có thể chưa được ghi nhận."); 
+            resetButton(); 
         });
     }
 
@@ -277,144 +447,185 @@
         submitBtn.style.color = "#fff";
     }
 
-    // XỬ LÝ LOGIC NỘP VÀ QUÉT OCR CHỐNG GIAN LẬN TIMEMARK
+    // XỬ LÝ QUÉT KÉP: METADATA EXIF (LỚP 1) -> AI OCR (LỚP 2)
     form.addEventListener('submit', e => {
         e.preventDefault();
         
         if (fileData === "") {
-            showCustomAlert("❌ LỖI TRỐNG ẢNH", "Vui lòng tải lên hình ảnh minh chứng bắt buộc.", "#c90000");
+            showCustomAlert("❌ LỖI TRỐNG ẢNH", "Vui lòng tải lên hình ảnh minh chứng bắt buộc.", "#c90000"); 
             return;
         }
         
-        // KIỂM TRA THỜI HẠN
         const ngayInput = document.querySelector('input[name="ngay"]').value;
-        const selDate = new Date(ngayInput);
+        const selDate = new Date(ngayInput); 
         selDate.setHours(0,0,0,0);
-        const now = new Date();
+        
+        const now = new Date(); 
         const todayDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
         const selMonths = selDate.getFullYear() * 12 + selDate.getMonth();
         const nowMonths = now.getFullYear() * 12 + now.getMonth();
 
+        // ĐIỀU KIỆN HARD BLOCK
         if (selMonths < nowMonths && now.getDate() > 3) {
-            showCustomAlert("❌ YÊU CẦU BỊ TỪ CHỐI", "Đã quá hạn nộp phiếu chấm công bổ sung, yêu cầu của bạn không thể thực hiện được.", "#c90000");
+            showCustomAlert("❌ YÊU CẦU BỊ TỪ CHỐI", "Đã quá hạn nộp phiếu chấm công bổ sung, yêu cầu của bạn không thể thực hiện được.", "#c90000"); 
             return; 
         }
 
         const diffTime = todayDate.getTime() - selDate.getTime();
-        const diffDays = Math.floor(diffTime / (1000 * 3600 * 24));
-        const isLate = diffDays > 5;
+        const isLate = Math.floor(diffTime / (1000 * 3600 * 24)) > 5;
+        document.getElementById('hiddenMaNV').value = "AVH" + document.getElementById('inputMaNV').value.trim();
 
-        const maSo = document.getElementById('inputMaNV').value.trim();
-        document.getElementById('hiddenMaNV').value = "AVH" + maSo;
-
-       // BẮT ĐẦU QUÁ TRÌNH QUÉT ẢNH BẰNG AI TESSERACT
         submitBtn.disabled = true;
-        submitBtn.style.backgroundColor = "#ffc107";
+        submitBtn.style.backgroundColor = "#ffc107"; 
         submitBtn.style.color = "#000";
         
-        // LẤY TRỰC TIẾP ẢNH GỐC ĐỂ AI ĐỌC (Không dùng ảnh nén để tránh vỡ pixel)
         const fileInputOCR = document.getElementById('fileUpload');
         const originalFileForOCR = fileInputOCR.files[0];
         
-        submitBtn.innerText = "🔍 Đang chuẩn bị AI quét ảnh...";
+        submitBtn.innerText = "🔍 Đang truy xuất Metadata ảnh...";
 
-        Tesseract.recognize(
-            originalFileForOCR,
-            'eng+vie',
-            { 
-                logger: m => {
-                    if(m.status === 'recognizing text') {
-                        submitBtn.innerText = `🔍 Đang quét xác minh: ${Math.round(m.progress * 100)}%`;
-                    }
-                }
-            }
-        ).then(({ data: { text } }) => {
-            // TỐI ƯU 2: Thuật toán lọc chữ hoàn hảo
-            // Xóa toàn bộ dấu tiếng Việt (AI hay đọc nhầm), chuyển 'đ' thành 'd' và xóa mọi khoảng trắng
-            const cleanText = text.toLowerCase()
-                                  .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // Xóa sạch dấu
-                                  .replace(/đ/g, "d") // Ép chữ đ thành d
-                                  .replace(/[^a-z0-9]/g, ''); // Bỏ toàn bộ khoảng trắng và ký tự lạ
-            
-            // TỐI ƯU 3: Bộ từ khóa siêu đặc trưng
-            const strongKeywords = [
-                'timemark', 'tinemark', 'timenark',
-                'diemdanh', // Bắt cụm "Điểm danh" màu vàng
-                'chanthuc', // Bắt cụm "Chân thực"
-                'camket',   // Bắt cụm "Cam kết ngày giờ"
-                'verified'
-            ];
-            
-            const isValid = strongKeywords.some(keyword => cleanText.includes(keyword));
-            
-            if (isValid) {
-                submitBtn.innerText = "✅ Xong! Đang tải lên máy chủ...";
+        // LỚP 1: QUÉT METADATA SIÊU TỐC
+        EXIF.getData(originalFileForOCR, function() {
+            const software = EXIF.getTag(this, "Software") || "";
+            const make = EXIF.getTag(this, "Make") || "";
+            const allExif = String(software + " " + make).toLowerCase();
+
+            if (allExif.includes("timemark")) {
+                // Đọc được MetaData gốc -> Qua luôn không cần quét AI
+                submitBtn.innerText = "✅ Quét Metadata thành công! Đang tải lên...";
                 submitToGoogleSheets(isLate);
             } else {
-                showCustomAlert("❌ ẢNH KHÔNG HỢP LỆ", "Ảnh tải lên không hợp lệ do đã qua chỉnh sửa hoặc không dùng đúng phần mềm chụp Timemark, vui lòng kiểm tra và thực hiện lại đúng yêu cầu.", "#c90000");
-                resetButton();
+                // LỚP 2: NẾU ẢNH QUA ZALO MẤT METADATA -> BẬT AI OCR
+                submitBtn.innerText = "🔍 Kích hoạt AI quét ảnh nén...";
+                
+                const readerOCR = new FileReader();
+                readerOCR.onload = function(event) {
+                    const imgObj = new Image();
+                    imgObj.onload = function() {
+                        
+                        const canvasOCR = document.createElement('canvas');
+                        const ctxOCR = canvasOCR.getContext('2d');
+                        
+                        // Cắt lấy 40% đáy ảnh. Tuyệt đối KHÔNG sử dụng grayscale hay contrast để tránh hỏng màu nguyên bản
+                        const cropHeight = imgObj.height * 0.40; 
+                        const cropY = imgObj.height - cropHeight;
+                        
+                        canvasOCR.width = imgObj.width;
+                        canvasOCR.height = cropHeight;
+                        
+                        ctxOCR.drawImage(imgObj, 0, cropY, imgObj.width, cropHeight, 0, 0, canvasOCR.width, canvasOCR.height);
+                        const ocrBase64 = canvasOCR.toDataURL('image/jpeg', 1.0); // Giữ chất lượng tối đa
+                        
+                        Tesseract.recognize(
+                            ocrBase64,
+                            'eng+vie',
+                            { 
+                                logger: m => { 
+                                    if(m.status === 'recognizing text') {
+                                        submitBtn.innerText = `🔍 AI Đang phân tích: ${Math.round(m.progress * 100)}%`; 
+                                    }
+                                } 
+                            }
+                        ).then(({ data: { text } }) => {
+                            
+                            // Tẩy rửa chữ để chấm điểm
+                            const cleanText = text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d");
+                            const noSpaceText = cleanText.replace(/[^a-z0-9:]/g, ''); 
+                            
+                            let score = 0;
+                            
+                            // Các từ khóa đặc quyền
+                            const vipKeywords = ['timemark', 'tinemark', 'timenark', 'diemdanh', 'chanthuc', 'camket', 'verified'];
+                            if (vipKeywords.some(kw => noSpaceText.includes(kw))) score += 100;
+                            
+                            if (/\d{1,2}:\d{2}/.test(noSpaceText)) score += 50; // Quét giờ
+                            
+                            const dateKeywords = ['thang', 'nam', 'thu', 'ngay', '2026', '2025'];
+                            if (dateKeywords.some(kw => noSpaceText.includes(kw))) score += 50; // Quét ngày
+                            
+                            const locationKeywords = ['phuong', 'quan', 'thanhpho', 'tinh', 'quoc', 'viet'];
+                            if (locationKeywords.some(kw => noSpaceText.includes(kw))) score += 50; // Quét địa điểm
+                            
+                            if (score >= 100) {
+                                submitBtn.innerText = "✅ AI Xác minh xong! Đang tải...";
+                                submitToGoogleSheets(isLate);
+                            } else {
+                                showCustomAlert("❌ ẢNH KHÔNG HỢP LỆ", "Ảnh tải lên không hợp lệ do đã qua chỉnh sửa hoặc không dùng đúng phần mềm chụp Timemark, vui lòng kiểm tra và thực hiện lại đúng yêu cầu.", "#c90000");
+                                resetButton();
+                            }
+                        }).catch(err => {
+                            console.error(err);
+                            showCustomAlert("⚠️ LỖI QUÉT ẢNH", "Hệ thống AI quá tải do ảnh. Vui lòng tải lại trang và thử lại.", "#c90000");
+                            resetButton();
+                        });
+                    };
+                    imgObj.src = event.target.result;
+                };
+                readerOCR.readAsDataURL(originalFileForOCR);
             }
-        }).catch(err => {
-            console.error(err);
-            showCustomAlert("⚠️ LỖI QUÉT ẢNH", "Hệ thống không thể quét được ảnh này. Vui lòng chụp rõ nét hơn.", "#c90000");
-            resetButton();
         });
     });
 
-    // 3. CÁC HÀM TRA CỨU
-    function openModal() { document.getElementById('searchModal').style.display = 'flex'; }
+    // CÁC HÀM TRA CỨU LỊCH SỬ
+    function openModal() { 
+        document.getElementById('searchModal').style.display = 'flex'; 
+    }
+    
     function closeModal() { 
         document.getElementById('searchModal').style.display = 'none'; 
-        document.getElementById('resultContainer').innerHTML = '';
-        document.getElementById('searchForm').reset();
+        document.getElementById('resultContainer').innerHTML = ''; 
+        document.getElementById('searchForm').reset(); 
     }
 
     document.getElementById('searchForm').addEventListener('submit', function(e) {
         e.preventDefault();
-        const btn = document.getElementById('btnSearch');
+        
+        const btn = document.getElementById('btnSearch'); 
         const resContainer = document.getElementById('resultContainer');
-        btn.innerText = "ĐANG TÌM...";
-        btn.disabled = true;
+        
+        btn.innerText = "ĐANG TÌM..."; 
+        btn.disabled = true; 
         resContainer.innerHTML = '<p class="text-center mt-3">Đang truy xuất dữ liệu...</p>';
 
         const formData = new FormData();
-        formData.append('action', 'searchHistory');
-        formData.append('name', document.getElementById('searchName').value);
+        formData.append('action', 'searchHistory'); 
+        formData.append('name', document.getElementById('searchName').value); 
         formData.append('maNV', "AVH" + document.getElementById('searchMaNV').value.trim()); 
 
         fetch(scriptURL, { method: 'POST', body: formData })
             .then(res => res.json())
             .then(data => {
-                btn.innerText = "KIỂM TRA";
+                btn.innerText = "KIỂM TRA"; 
                 btn.disabled = false;
+                
                 if(data.status === "success" && data.data.length > 0) {
                     let html = '<ul class="list-group mt-3">';
                     data.data.forEach(item => {
-                        let badgeColor = "bg-warning text-dark"; // Chờ duyệt
-                        if (item.trangThai === "Đã hoàn thành") badgeColor = "bg-success"; // Hoàn thành
-                        else if (item.trangThai === "Từ chối" || item.trangThai === "HCNS Trả lại") badgeColor = "bg-danger"; // Bị từ chối / Trả lại
-
+                        let badgeColor = "bg-warning text-dark"; // Mặc định chờ duyệt
+                        if (item.trangThai === "Đã hoàn thành") {
+                            badgeColor = "bg-success";
+                        } else if (item.trangThai === "Từ chối" || item.trangThai === "HCNS Trả lại") {
+                            badgeColor = "bg-danger";
+                        }
+                        
                         html += `
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                <div>
-                                    <strong>${item.ngay}</strong><br>
-                                    <span class="text-muted">${item.lyDo}</span>
-                                </div>
-                                <span class="badge ${badgeColor}">${item.trangThai}</span>
-                            </li>
-                        `;
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>${item.ngay}</strong><br>
+                                <span class="text-muted">${item.lyDo}</span>
+                            </div>
+                            <span class="badge ${badgeColor}">${item.trangThai}</span>
+                        </li>`;
                     });
-                    html += '</ul>';
-                    resContainer.innerHTML = html;
+                    resContainer.innerHTML = html + '</ul>';
                 } else {
                     resContainer.innerHTML = '<p class="text-center text-danger mt-3 fw-bold">Không tìm thấy dữ liệu khớp với thông tin!</p>';
                 }
-            })
-            .catch(err => {
-                btn.innerText = "KIỂM TRA";
-                btn.disabled = false;
-                resContainer.innerHTML = '<p class="text-center text-danger mt-3">Lỗi kết nối!</p>';
+            }).catch(err => { 
+                btn.innerText = "KIỂM TRA"; 
+                btn.disabled = false; 
+                resContainer.innerHTML = '<p class="text-center text-danger mt-3">Lỗi kết nối!</p>'; 
             });
     });
 </script>
