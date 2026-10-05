@@ -482,7 +482,7 @@
             } else {
                 
                 // LỚP 2: TÁCH NỀN VÀ KHOÉT RỖNG TÂM ẢNH OCR
-                submitBtn.innerText = "🔍 Kích hoạt AI quét khung viền ảnh...";
+                submitBtn.innerText = "🔍 Đang nạp dữ liệu AI...";
                 
                 const readerOCR = new FileReader();
                 readerOCR.onload = function(event) {
@@ -492,43 +492,37 @@
                         const canvasOCR = document.createElement('canvas');
                         const ctxOCR = canvasOCR.getContext('2d');
                         
-                        // Nén bề mặt ảnh để AI quét siêu tốc
+                        // ĐÃ SỬA LỖI IMG.WIDTH TẠI ĐÂY -> CHUYỂN THÀNH IMGOBJ.WIDTH
                         const MAX_OCR_WIDTH = 800; 
-                        const scaleOCR = Math.min(1, MAX_OCR_WIDTH / img.width);
-                        canvasOCR.width = img.width * scaleOCR;
-                        canvasOCR.height = img.height * scaleOCR;
+                        const scaleOCR = Math.min(1, MAX_OCR_WIDTH / imgObj.width);
+                        canvasOCR.width = imgObj.width * scaleOCR;
+                        canvasOCR.height = imgObj.height * scaleOCR;
                         
                         // Vẽ toàn bộ bức ảnh lên Canvas
                         ctxOCR.drawImage(imgObj, 0, 0, canvasOCR.width, canvasOCR.height);
                         
-                        // THUẬT TOÁN KHOÉT RỖNG TÂM ẢNH (CHỈ CHỪA LẠI VIỀN XUNG QUANH)
-                        // Giữ lại Lề trên 15%, Lề đáy 30%, Lề trái 15%, Lề phải 15%
+                        // THUẬT TOÁN KHOÉT RỖNG TÂM ẢNH
                         const maskX = canvasOCR.width * 0.15;
                         const maskY = canvasOCR.height * 0.15;
                         const maskW = canvasOCR.width * 0.70;
                         const maskH = canvasOCR.height * 0.55;
                         
-                        // Tô trắng tinh phần trung tâm ảnh
                         ctxOCR.fillStyle = "#ffffff";
                         ctxOCR.fillRect(maskX, maskY, maskW, maskH);
                         
-                        // TÁCH NỀN (Binarization): Biến chữ trắng/vàng thành đen, xóa tạp âm thành trắng
+                        // TÁCH NỀN (Binarization)
                         const imageData = ctxOCR.getImageData(0, 0, canvasOCR.width, canvasOCR.height);
                         const data = imageData.data;
                         
                         for (let i = 0; i < data.length; i += 4) {
                             const r = data[i]; const g = data[i+1]; const b = data[i+2];
                             
-                            // Phổ màu chữ Trắng sáng (hoặc hơi xám)
                             const isWhite = (r > 190 && g > 190 && b > 190);
-                            // Phổ màu chữ Vàng chanh / Cam nhạt (Logo Timemark)
                             const isYellow = (r > 170 && g > 140 && b < 130);
                             
                             if (isWhite || isYellow) {
-                                // Biến chữ thành màu ĐEN
                                 data[i] = 0; data[i+1] = 0; data[i+2] = 0;
                             } else {
-                                // Biến mọi rác nền còn lại thành TRẮNG
                                 data[i] = 255; data[i+1] = 255; data[i+2] = 255;
                             }
                         }
@@ -539,15 +533,25 @@
                         Tesseract.recognize(
                             ocrBase64,
                             'eng+vie',
-                            { logger: m => { if(m.status === 'recognizing text') submitBtn.innerText = `🔍 AI Đang phân tích viền: ${Math.round(m.progress * 100)}%`; } }
+                            { 
+                                logger: m => { 
+                                    // TÍNH NĂNG MỚI: Hiển thị chi tiết trạng thái để bạn không tưởng web bị đơ
+                                    const statusMap = {
+                                        'loading tesseract core': 'Tải lõi AI',
+                                        'loading language traineddata': 'Tải ngôn ngữ AI',
+                                        'initializing api': 'Khởi tạo API',
+                                        'recognizing text': 'Đang quét ảnh'
+                                    };
+                                    let statusText = statusMap[m.status] || m.status;
+                                    submitBtn.innerText = `🔍 ${statusText}: ${Math.round(m.progress * 100)}%`; 
+                                } 
+                            }
                         ).then(({ data: { text } }) => {
                             
-                            // Tẩy sạch dấu câu tiếng việt
                             const cleanText = text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d");
                             const noSpaceText = cleanText.replace(/[^a-z0-9:]/g, ''); 
                             let score = 0;
                             
-                            // Tính điểm dựa trên từ khóa không cần nguyên vẹn
                             const vipKeywords = ['timemark', 'tinemark', 'timenark', 'diemdanh', 'chanthuc', 'camket', 'verified'];
                             if (vipKeywords.some(kw => noSpaceText.includes(kw))) score += 100;
                             
@@ -558,7 +562,6 @@
                             const locationKeywords = ['phuong', 'quan', 'thanhpho', 'tinh', 'quoc', 'viet'];
                             if (locationKeywords.some(kw => noSpaceText.includes(kw))) score += 50; 
                             
-                            // Chỉ cần >= 100 điểm là vượt qua
                             if (score >= 100) {
                                 submitBtn.innerText = "✅ AI Xác minh xong! Đang tải...";
                                 submitToGoogleSheets(isLate);
@@ -568,7 +571,7 @@
                             }
                         }).catch(err => {
                             console.error(err);
-                            showCustomAlert("⚠️ LỖI QUÉT ẢNH", "Hệ thống AI quá tải. Vui lòng tải lại trang và thử lại.", "#c90000");
+                            showCustomAlert("⚠️ LỖI QUÉT ẢNH", "Hệ thống AI gặp sự cố. Vui lòng tải lại trang và thử lại.", "#c90000");
                             resetButton();
                         });
                     };
