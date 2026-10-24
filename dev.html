@@ -121,7 +121,7 @@
             margin-bottom: 5px;
         }
         .btn-camera-trigger {
-            background-color: #001a72; /* Đồng bộ xanh biển */
+            background-color: #001a72; 
             color: #fff;
             border: none;
             padding: 10px 20px;
@@ -147,18 +147,18 @@
         #webcamVideo { width: 100%; height: 100%; object-fit: cover; display: block; }
         #capturedCanvasPreview { width: 100%; height: 100%; object-fit: cover; display: none; }
         
-        /* Lớp phủ trực tiếp chuẩn tệp wtm.png + thời gian thực */
         .live-watermark-overlay {
             position: absolute; bottom: 0; left: 0; right: 0;
             padding: 20px; pointer-events: none;
             display: flex; flex-direction: column; justify-content: flex-end;
-            background: linear-gradient(to top, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0) 100%);
+            background: linear-gradient(to top, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0) 100%);
         }
         .live-wtm-img {
-            width: 80%; max-width: 280px; height: auto; display: block; margin-bottom: 6px;
+            width: 80%; max-width: 280px; height: auto; display: block; margin-bottom: 8px;
         }
         .live-time-row {
             display: flex; align-items: center; gap: 10px; font-family: monospace; color: #fff; font-size: 18px; font-weight: 700;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.8);
         }
         .live-time-row .line-sep {
             width: 2px; height: 18px; background-color: #fff; display: inline-block;
@@ -167,13 +167,12 @@
         .camera-actions {
             margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; width: 100%; max-width: 500px;
         }
-        /* Đồng bộ màu xanh biển cho các nút chính, bỏ icon */
         .btn-cam-action { 
             background: #001a72; color: #fff; font-weight: 700; padding: 10px 20px; border-radius: 30px; border: none; cursor: pointer; font-size: 14px;
         }
         .btn-cam-action:hover { background: #00104a; }
-        .btn-cam-action.secondary { background: #6c757d; color: #fff; } /* Nút chụp lại: xám */
-        .btn-close-cam { background: #dc3545; color: #fff; font-weight: 700; padding: 10px 20px; border-radius: 30px; border: none; cursor: pointer; font-size: 14px;} /* Nút hủy: đỏ */
+        .btn-cam-action.secondary { background: #6c757d; color: #fff; } 
+        .btn-close-cam { background: #dc3545; color: #fff; font-weight: 700; padding: 10px 20px; border-radius: 30px; border: none; cursor: pointer; font-size: 14px;} 
 
         .preview-thumb { margin-top: 8px; font-size: 13px; color: #28a745; font-weight: 700; display: none; }
 
@@ -285,7 +284,6 @@
         <video id="webcamVideo" autoplay playsinline></video>
         <canvas id="capturedCanvasPreview"></canvas>
         
-        <!-- Hiển thị trực tiếp chuẩn thiết kế wtm.png + thời gian thực -->
         <div class="live-watermark-overlay" id="liveWatermarkOverlay">
             <img src="wtm.png" class="live-wtm-img" alt="Watermark Logo" onerror="this.style.display='none';">
             <div class="live-time-row">
@@ -296,7 +294,6 @@
         </div>
     </div>
     
-    <!-- Các nút điều hướng với màu sắc đồng bộ, loại bỏ icon -->
     <div class="camera-actions" id="cameraControlButtons">
         <button type="button" class="btn-cam-action" onclick="takeSnapshot()">Chụp ảnh</button>
         <button type="button" class="btn-close-cam" onclick="closeCameraModal()">Hủy</button>
@@ -380,9 +377,9 @@
 
     function showCustomAlert(title, msg, color) {
         document.getElementById('customAlertTitle').innerText = title;
-        document.getElementById('customAlertTitle').style.color = color;
+        document.getElementById('customAlertTitle').style.color = color; // Đã nhận màu xanh thành công chuẩn #28a745
         document.getElementById('customAlertMessage').innerText = msg;
-        document.getElementById('customAlertMessage').style.color = (color === "#c90000") ? "#c90000" : "#333";
+        document.getElementById('customAlertMessage').style.color = "#333";
         document.getElementById('customAlertModal').style.display = 'flex';
     }
 
@@ -434,12 +431,11 @@
         document.getElementById('liveDateDisplay').innerText = dateStr;
     }
 
-    // --- CROP ẢNH CHUẨN TỶ LỆ DỌC 3:4 VÀ GẮN WATERMARK SẮC NÉT ---
+    // --- CROP ẢNH CHUẨN 3:4, HẠ KHOẢNG CÁCH VÀ TỰ ĐỘNG ĐỔI MÀU CHỮ THEO NỀN SÁNG/TỐI ---
     function takeSnapshot() {
         const videoW = videoElement.videoWidth;
         const videoH = videoElement.videoHeight;
 
-        // Tính toán crop khung hình video chuẩn tỷ lệ dọc 3:4 từ camera
         let cropW = videoW;
         let cropH = videoW * (4 / 3);
         let cropX = 0;
@@ -453,48 +449,76 @@
         }
 
         const canvas = document.getElementById('snapshotCanvas');
-        canvas.width = 1200; // Độ phân giải chuẩn ảnh đầu ra
-        canvas.height = 1600; // Tỷ lệ dọc 3:4
+        canvas.width = 1200; 
+        canvas.height = 1600; 
         const ctx = canvas.getContext('2d');
 
-        // 1. Cắt và vẽ khung hình camera vào canvas chuẩn 3:4
+        // 1. Vẽ hình ảnh camera đã crop
         ctx.drawImage(videoElement, cropX, cropY, cropW, cropH, 0, 0, canvas.width, canvas.height);
 
-        // 2. Lấy thời gian thực
+        // 2. Thuật toán tự động đo độ sáng vùng đặt chữ (Góc dưới trái) để quyết định màu chữ (Đen hay Trắng)
+        const sampleX = Math.round(canvas.width * 0.08);
+        const sampleY = Math.round(canvas.height * 0.85);
+        const sampleW = Math.round(canvas.width * 0.5);
+        const sampleH = Math.round(canvas.height * 0.1);
+        
+        let textColor = "#ffffff"; // Mặc định chữ trắng
+        try {
+            const pixelData = ctx.getImageData(sampleX, sampleY, sampleW, sampleH).data;
+            let totalBrightness = 0;
+            let count = 0;
+            for (let i = 0; i < pixelData.length; i += 16) { // Lấy mẫu thưa để tối ưu hiệu năng
+                const r = pixelData[i];
+                const g = pixelData[i+1];
+                const b = pixelData[i+2];
+                // Công thức tính độ sáng YIQ tiêu chuẩn
+                const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+                totalBrightness += brightness;
+                count++;
+            }
+            const avgBrightness = totalBrightness / count;
+            if (avgBrightness > 150) {
+                textColor = "#111111"; // Nền sáng -> Chữ đen sắc nét
+            }
+        } catch (e) {
+            console.log("Không thể quét độ sáng nền, mặc định dùng chữ trắng.", e);
+        }
+
+        // 3. Lấy thời gian thực
         const now = new Date();
         const timeStr = now.toLocaleTimeString('vi-VN', { hour12: false });
         const dateStr = now.toLocaleDateString('vi-VN');
 
-        // 3. Tải và vẽ file wtm.png với kích thước lớn, sắc nét ở góc dưới
+        // 4. Tải và vẽ file wtm.png với khoảng cách lùi xuống hợp lý
         const wtmLogo = new Image();
         wtmLogo.crossOrigin = "anonymous";
         wtmLogo.src = 'wtm.png';
         wtmLogo.onload = function() {
             const paddingX = 60;
-            const paddingBottom = 70;
+            const paddingBottom = 90; // Hạ thấp khoảng cách xuống so với trước
             
-            const logoW = canvas.width * 0.65; // Kích thước watermark to rõ theo yêu cầu
+            const logoW = canvas.width * 0.65; 
             const logoH = (wtmLogo.height / wtmLogo.width) * logoW;
             const logoX = paddingX;
-            const logoY = canvas.height - paddingBottom - logoH - 80;
+            const logoY = canvas.height - paddingBottom - logoH - 85;
 
             ctx.drawImage(wtmLogo, logoX, logoY, logoW, logoH);
 
-            // Vẽ thời gian ngay phía dưới logo
-            const timeY = logoY + logoH + 45;
+            // Vẽ thời gian với màu tự động điều chỉnh (Trắng/Đen)
+            const timeY = logoY + logoH + 50;
             const fontSize = Math.round(canvas.width * 0.045);
             
             ctx.font = `bold ${fontSize}px monospace`;
-            ctx.fillStyle = "#ffffff";
+            ctx.fillStyle = textColor;
             ctx.fillText(timeStr, logoX, timeY);
 
             const timeMeasure = ctx.measureText(timeStr);
             const sepX = logoX + timeMeasure.width + 30;
             
-            ctx.fillStyle = "#ffffff";
+            ctx.fillStyle = textColor;
             ctx.fillRect(sepX, timeY - Math.round(fontSize * 0.8), 4, fontSize);
 
-            ctx.fillStyle = "#ffffff";
+            ctx.fillStyle = textColor;
             ctx.fillText(dateStr, sepX + 30, timeY);
 
             finalizeSnapshot(canvas);
@@ -597,9 +621,9 @@
                 submitBtn.style.color = "#fff";
                 
                 if(isLate) {
-                    showCustomAlert("⚠ NỘP TRỄ HẠN", "Nộp phiếu thành công, nhưng do đã quá thời hạn 5 ngày theo quy định nên phiếu của bạn có thể bị HCNS trả lại hoặc không phê duyệt.", "#c90000");
+                    showCustomAlert("⚠ NỘP TRỄ HẠN", "Nộp phiếu thành công, nhưng do đã quá thời hạn 5 ngày theo quy định nên phiếu của bạn có thể bị HCNS trả lại hoặc không phê duyệt.", "#28a745");
                 } else {
-                    showCustomAlert("✅ XÁC MINH HOÀN TẤT", "Đã gửi phiếu chấm công và tải ảnh thành công!", "#c90000");
+                    showCustomAlert("✅ XÁC MINH HOÀN TẤT", "Đã gửi phiếu chấm công và tải ảnh thành công!", "#28a745"); // Đã đổi sang màu xanh lá #28a745
                 }
 
                 setTimeout(() => {
