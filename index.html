@@ -158,11 +158,11 @@
             filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6));
         }
         .live-time-row {
-            display: flex; align-items: center; gap: 10px; font-family: monospace; color: #fff; font-size: 18px; font-weight: 700;
+            display: flex; align-items: center; gap: 10px; font-family: 'Manrope', sans-serif; color: #fff; font-size: 17px; font-weight: 700;
             text-shadow: 0 2px 4px rgba(0,0,0,0.8);
         }
         .live-time-row .line-sep {
-            width: 2px; height: 18px; background-color: #fff; display: inline-block;
+            width: 2px; height: 16px; background-color: #fff; display: inline-block;
         }
 
         .camera-actions {
@@ -432,7 +432,7 @@
         document.getElementById('liveDateDisplay').innerText = dateStr;
     }
 
-    // --- CROP ẢNH 3:4, TỐI ƯU CHẤT LƯỢNG wtm.png VÀ TẠO HIỆU ỨNG DROP SHADOW ---
+    // --- CHỤP ẢNH TỪ WEB (SỬ DỤNG FONT MANROPE CHUẨN ĐỒ HỌA) ---
     function takeSnapshot() {
         const videoW = videoElement.videoWidth;
         const videoH = videoElement.videoHeight;
@@ -454,20 +454,21 @@
         canvas.height = 1600; 
         const ctx = canvas.getContext('2d');
 
-        // Bật tính năng nội suy chất lượng cao cho canvas để ảnh không bị mờ/vỡ hạt
         ctx.imageSmoothingEnabled = true;
         ctx.imageSmoothingQuality = 'high';
 
-        // 1. Vẽ hình ảnh camera đã crop
         ctx.drawImage(videoElement, cropX, cropY, cropW, cropH, 0, 0, canvas.width, canvas.height);
 
-        // 2. Thuật toán tự động đo độ sáng vùng đặt chữ (Góc dưới trái) để quyết định màu chữ (Đen hay Trắng)
+        // Ghi nhận chữ ký số ẩn nhận diện ảnh hợp lệ từ Web
+        ctx.fillStyle = "rgba(0, 26, 114, 0.99)";
+        ctx.fillRect(canvas.width - 5, canvas.height - 5, 5, 5);
+
         const sampleX = Math.round(canvas.width * 0.08);
         const sampleY = Math.round(canvas.height * 0.85);
         const sampleW = Math.round(canvas.width * 0.5);
         const sampleH = Math.round(canvas.height * 0.1);
         
-        let textColor = "#ffffff"; // Mặc định chữ trắng
+        let textColor = "#ffffff"; 
         try {
             const pixelData = ctx.getImageData(sampleX, sampleY, sampleW, sampleH).data;
             let totalBrightness = 0;
@@ -480,20 +481,17 @@
                 totalBrightness += brightness;
                 count++;
             }
-            const avgBrightness = totalBrightness / count;
-            if (avgBrightness > 150) {
-                textColor = "#111111"; // Nền sáng -> Chữ đen
+            if ((totalBrightness / count) > 150) {
+                textColor = "#111111"; 
             }
         } catch (e) {
-            console.log("Không thể quét độ sáng nền, mặc định dùng chữ trắng.", e);
+            console.log(e);
         }
 
-        // 3. Lấy thời gian thực
         const now = new Date();
         const timeStr = now.toLocaleTimeString('vi-VN', { hour12: false });
         const dateStr = now.toLocaleDateString('vi-VN');
 
-        // 4. Tải và vẽ file wtm.png với cấu hình Drop Shadow sắc nét cao
         const wtmLogo = new Image();
         wtmLogo.crossOrigin = "anonymous";
         wtmLogo.src = 'wtm.png';
@@ -506,20 +504,18 @@
             const logoX = paddingX;
             const logoY = canvas.height - paddingBottom - logoH - 85;
 
-            // Kích hoạt hiệu ứng Drop Shadow (Đổ bóng mờ nổi khối) cho toàn bộ watermark
             ctx.shadowColor = textColor === "#ffffff" ? "rgba(0, 0, 0, 0.7)" : "rgba(255, 255, 255, 0.7)";
             ctx.shadowBlur = 8;
             ctx.shadowOffsetX = 2;
             ctx.shadowOffsetY = 2;
 
-            // Vẽ logo wtm.png với độ phân giải và chất lượng tối đa
             ctx.drawImage(wtmLogo, logoX, logoY, logoW, logoH);
 
-            // Vẽ thời gian với hiệu ứng đổ bóng đồng bộ
+            // Sử dụng chuẩn font chữ Manrope trên Canvas
             const timeY = logoY + logoH + 50;
-            const fontSize = Math.round(canvas.width * 0.045);
+            const fontSize = Math.round(canvas.width * 0.043);
             
-            ctx.font = `bold ${fontSize}px monospace`;
+            ctx.font = `700 ${fontSize}px 'Manrope', sans-serif`;
             ctx.fillStyle = textColor;
             ctx.fillText(timeStr, logoX, timeY);
 
@@ -527,12 +523,11 @@
             const sepX = logoX + timeMeasure.width + 30;
             
             ctx.fillStyle = textColor;
-            ctx.fillRect(sepX, timeY - Math.round(fontSize * 0.8), 4, fontSize);
+            ctx.fillRect(sepX, timeY - Math.round(fontSize * 0.75), 4, fontSize * 0.85);
 
             ctx.fillStyle = textColor;
             ctx.fillText(dateStr, sepX + 30, timeY);
 
-            // Reset lại shadow để không ảnh hưởng các thao tác khác
             ctx.shadowColor = "transparent";
             ctx.shadowBlur = 0;
             ctx.shadowOffsetX = 0;
@@ -599,6 +594,9 @@
         if(!file) { fileData = ""; fileMimeType = ""; return; }
         
         isWebcamCaptured = false; 
+        document.getElementById('previewStatus').style.display = 'block';
+        document.getElementById('previewStatus').innerText = "🔍 Đang kiểm tra tính hợp lệ của ảnh tải lên...";
+
         const reader = new FileReader();
         reader.onload = function(event) {
             const img = new Image();
@@ -612,11 +610,24 @@
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-                const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+                let isOurWebImage = false;
+                try {
+                    const testPixel = ctx.getImageData(canvas.width - 2, canvas.height - 2, 1, 1).data;
+                    if (testPixel[0] < 5 && testPixel[1] > 20 && testPixel[2] > 100) {
+                        isOurWebImage = true;
+                    }
+                } catch(e) {}
+
+                const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
                 fileMimeType = 'image/jpeg';
                 fileData = dataUrl.split(',')[1];
-                document.getElementById('previewStatus').style.display = 'block';
-                document.getElementById('previewStatus').innerText = "✅ Đã chọn ảnh từ thiết bị!";
+
+                if (isOurWebImage) {
+                    document.getElementById('previewStatus').innerText = "✅ Xác thực thành công: Ảnh hợp lệ xuất từ Web Chấm Công!";
+                    isWebcamCaptured = true; 
+                } else {
+                    document.getElementById('previewStatus').innerText = "✅ Đã tải ảnh từ thiết bị (Sẵn sàng gửi nộp)";
+                }
             }
             img.src = event.target.result;
         };
