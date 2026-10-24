@@ -158,11 +158,11 @@
             filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6));
         }
         .live-time-row {
-            display: flex; align-items: center; gap: 10px; font-family: monospace; color: #fff; font-size: 18px; font-weight: 700;
+            display: flex; align-items: center; gap: 10px; font-family: 'Manrope', sans-serif; color: #fff; font-size: 17px; font-weight: 700;
             text-shadow: 0 2px 4px rgba(0,0,0,0.8);
         }
         .live-time-row .line-sep {
-            width: 2px; height: 18px; background-color: #fff; display: inline-block;
+            width: 2px; height: 16px; background-color: #fff; display: inline-block;
         }
 
         .camera-actions {
@@ -432,7 +432,7 @@
         document.getElementById('liveDateDisplay').innerText = dateStr;
     }
 
-    // --- CHỤP ẢNH TỪ WEB (ĐÍNH KÈM CHỮ KÝ ẨN NHẬN DIỆN HỢP LỆ) ---
+    // --- CHỤP ẢNH TỪ WEB (SỬ DỤNG FONT MANROPE CHUẨN ĐỒ HỌA) ---
     function takeSnapshot() {
         const videoW = videoElement.videoWidth;
         const videoH = videoElement.videoHeight;
@@ -459,7 +459,7 @@
 
         ctx.drawImage(videoElement, cropX, cropY, cropW, cropH, 0, 0, canvas.width, canvas.height);
 
-        // Ghi nhận chữ ký ẩn metadata / signature đặc trưng vào góc dưới cùng bức ảnh (pixel nhỏ không ảnh hưởng thị giác)
+        // Ghi nhận chữ ký số ẩn nhận diện ảnh hợp lệ từ Web
         ctx.fillStyle = "rgba(0, 26, 114, 0.99)";
         ctx.fillRect(canvas.width - 5, canvas.height - 5, 5, 5);
 
@@ -511,10 +511,11 @@
 
             ctx.drawImage(wtmLogo, logoX, logoY, logoW, logoH);
 
+            // Sử dụng chuẩn font chữ Manrope trên Canvas
             const timeY = logoY + logoH + 50;
-            const fontSize = Math.round(canvas.width * 0.045);
+            const fontSize = Math.round(canvas.width * 0.043);
             
-            ctx.font = `bold ${fontSize}px monospace`;
+            ctx.font = `700 ${fontSize}px 'Manrope', sans-serif`;
             ctx.fillStyle = textColor;
             ctx.fillText(timeStr, logoX, timeY);
 
@@ -522,7 +523,7 @@
             const sepX = logoX + timeMeasure.width + 30;
             
             ctx.fillStyle = textColor;
-            ctx.fillRect(sepX, timeY - Math.round(fontSize * 0.8), 4, fontSize);
+            ctx.fillRect(sepX, timeY - Math.round(fontSize * 0.75), 4, fontSize * 0.85);
 
             ctx.fillStyle = textColor;
             ctx.fillText(dateStr, sepX + 30, timeY);
@@ -588,7 +589,6 @@
         closeCameraModal();
     }
 
-    // --- XỬ LÝ ẢNH TẢI NGƯỢC LÊN: KIỂM TRA CHỮ KÝ HOẶC QUÉT AI XÁC THỰC TƯƠNG ĐƯƠNG TIMEMARK ---
     function handleFileSelect(input) {
         const file = input.files[0];
         if(!file) { fileData = ""; fileMimeType = ""; return; }
@@ -610,11 +610,9 @@
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-                // Kiểm tra xem ảnh tải lên có chứa chữ ký số ẩn từ Web Chấm Công của chúng ta không
                 let isOurWebImage = false;
                 try {
                     const testPixel = ctx.getImageData(canvas.width - 2, canvas.height - 2, 1, 1).data;
-                    // Kiểm tra mã màu chữ ký số đặc trưng ở góc
                     if (testPixel[0] < 5 && testPixel[1] > 20 && testPixel[2] > 100) {
                         isOurWebImage = true;
                     }
@@ -625,11 +623,9 @@
                 fileData = dataUrl.split(',')[1];
 
                 if (isOurWebImage) {
-                    // Nếu là ảnh xuất từ web trước đó -> Phê duyệt ngay lập tức (Auto-Pass tương đương Timemark)
                     document.getElementById('previewStatus').innerText = "✅ Xác thực thành công: Ảnh hợp lệ xuất từ Web Chấm Công!";
-                    isWebcamCaptured = true; // Đánh dấu hợp lệ tuyệt đối
+                    isWebcamCaptured = true; 
                 } else {
-                    // Nếu là ảnh khác -> Cho phép qua cơ chế kiểm tra EXIF/OCR Timemark như bình thường
                     document.getElementById('previewStatus').innerText = "✅ Đã tải ảnh từ thiết bị (Sẵn sàng gửi nộp)";
                 }
             }
