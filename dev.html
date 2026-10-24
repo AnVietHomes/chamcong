@@ -136,25 +136,32 @@
         /* Modal Camera trực tiếp */
         .camera-modal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9); display: none; justify-content: center; align-items: center; z-index: 2000;
+            background: rgba(0,0,0,0.95); display: none; justify-content: center; align-items: center; z-index: 2000;
             flex-direction: column;
         }
         .camera-box {
-            position: relative; max-width: 600px; width: 100%; background: #000; border-radius: 12px; overflow: hidden;
+            position: relative; max-width: 550px; width: 100%; background: #000; border-radius: 12px; overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
         #webcamVideo { width: 100%; display: block; transform: scaleX(-1); }
         #capturedCanvasPreview { width: 100%; display: none; }
         
-        .live-watermark {
-            position: absolute; bottom: 20px; left: 20px; right: 20px;
-            background: rgba(0, 0, 0, 0.6); color: #fff; padding: 12px 18px;
-            border-radius: 8px; font-family: monospace; pointer-events: none;
-            border-left: 4px solid #ffc107; display: flex; align-items: center; justify-content: space-between;
+        /* Lớp phủ Watermark chuẩn theo đúng thiết kế của bạn trên màn hình live */
+        .live-watermark-overlay {
+            position: absolute; bottom: 0; left: 0; right: 0;
+            padding: 25px 30px; pointer-events: none;
+            display: flex; flex-direction: column; justify-content: flex-end;
+            background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 100%);
         }
-        .lw-info .lw-title { font-size: 15px; font-weight: 800; color: #ffc107; text-transform: uppercase; }
-        .lw-info .lw-time { font-size: 18px; font-weight: 700; margin: 3px 0; }
-        .lw-info .lw-company { font-size: 11px; opacity: 0.8; }
-        .lw-logo img { height: 40px; object-fit: contain; }
+        .live-wtm-img {
+            width: 100%; max-width: 380px; height: auto; display: block; margin-bottom: 8px;
+        }
+        .live-time-row {
+            display: flex; align-items: center; gap: 15px; font-family: monospace; color: #fff; font-size: 24px; font-weight: 700;
+        }
+        .live-time-row .line-sep {
+            width: 3px; height: 24px; background-color: #fff; display: inline-block;
+        }
 
         .camera-actions {
             margin-top: 20px; display: flex; gap: 15px; flex-wrap: wrap; justify-content: center;
@@ -274,15 +281,13 @@
         <video id="webcamVideo" autoplay playsinline></video>
         <canvas id="capturedCanvasPreview"></canvas>
         
-        <!-- Watermark live hiển thị trực tiếp khi mở camera -->
-        <div class="live-watermark" id="liveWatermarkOverlay">
-            <div class="lw-info">
-                <div class="lw-title">⚡ AN VIỆT HOMES VERIFIED</div>
-                <div class="lw-time" id="liveTimeDisplay">00:00:00 - 00/00/0000</div>
-                <div class="lw-company">Chấm công trực tuyến - 100% Chân thực</div>
-            </div>
-            <div class="lw-logo">
-                <img src="wtm.png" alt="Watermark Logo" onerror="this.style.display='none'">
+        <!-- Giao diện hiển thị trực tiếp chuẩn mẫu thiết kế -->
+        <div class="live-watermark-overlay" id="liveWatermarkOverlay">
+            <img src="wtm.png" class="live-wtm-img" alt="Watermark Logo">
+            <div class="live-time-row">
+                <span id="liveTimeDisplay">13:49:16</span>
+                <span class="line-sep"></span>
+                <span id="liveDateDisplay">24/10/2026</span>
             </div>
         </div>
     </div>
@@ -292,7 +297,6 @@
         <button type="button" class="btn-close-cam" onclick="closeCameraModal()">Hủy bỏ</button>
     </div>
 
-    <!-- Nhóm nút hiện ra sau khi đã chụp để xác nhận hoặc chụp lại -->
     <div class="camera-actions" id="confirmControlButtons" style="display: none;">
         <button type="button" class="btn-cam-action success" onclick="confirmCapturedImage()">✅ Xác nhận dùng ảnh</button>
         <button type="button" class="btn-cam-action secondary" onclick="retakeSnapshot()">🔄 Chụp lại</button>
@@ -366,8 +370,8 @@
 
     let fileData = "";
     let fileMimeType = "";
-    let isWebcamCaptured = false; // Cờ auto pass khi chụp trực tiếp từ web
-    let finalProcessedDataUrl = ""; // Lưu trữ ảnh hoàn chỉnh để tải về hoặc gửi đi
+    let isWebcamCaptured = false; 
+    let finalProcessedDataUrl = ""; 
 
     function showCustomAlert(title, msg, color) {
         document.getElementById('customAlertTitle').innerText = title;
@@ -381,7 +385,6 @@
         document.getElementById('customAlertModal').style.display = 'none';
     }
 
-    // --- LOGIC MỞ & ĐIỀU KHIỂN WEBCAM ---
     let mediaStream = null;
     const videoElement = document.getElementById('webcamVideo');
     const previewCanvasElem = document.getElementById('capturedCanvasPreview');
@@ -420,62 +423,71 @@
 
     function updateLiveClock() {
         const now = new Date();
-        const timeStr = now.toLocaleTimeString('vi-VN');
+        const timeStr = now.toLocaleTimeString('vi-VN', { hour12: false });
         const dateStr = now.toLocaleDateString('vi-VN');
-        document.getElementById('liveTimeDisplay').innerText = `${timeStr} - ${dateStr}`;
+        document.getElementById('liveTimeDisplay').innerText = timeStr;
+        document.getElementById('liveDateDisplay').innerText = dateStr;
     }
 
-    // --- CHỤP ẢNH VÀ XEM TRƯỚC (PREVIEW) ---
+    // --- CHỤP ẢNH VÀ GHÉP FILE wtm.png CHUẨN TỶ LỆ ---
     function takeSnapshot() {
         const canvas = document.getElementById('snapshotCanvas');
         canvas.width = videoElement.videoWidth || 1280;
         canvas.height = videoElement.videoHeight || 720;
         const ctx = canvas.getContext('2d');
 
-        // 1. Vẽ khung hình từ video camera
+        // 1. Vẽ khung hình từ camera
         ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
 
         // 2. Lấy thông tin thời gian thực
         const now = new Date();
-        const timeStr = now.toLocaleTimeString('vi-VN');
+        const timeStr = now.toLocaleTimeString('vi-VN', { hour12: false });
         const dateStr = now.toLocaleDateString('vi-VN');
 
-        // 3. Khắc chìm khung nền Watermark
-        const boxHeight = 110;
-        const boxY = canvas.height - boxHeight - 30;
-        const boxX = 30;
-        const boxWidth = canvas.width - 60;
-
-        ctx.fillStyle = "rgba(0, 0, 0, 0.65)";
-        ctx.fillRect(boxX, boxY, boxWidth, boxHeight);
-
-        ctx.fillStyle = "#ffc107";
-        ctx.font = "bold 26px Manrope, sans-serif";
-        ctx.fillText("⚡ AN VIỆT HOMES VERIFIED CHẤM CÔNG", boxX + 25, boxY + 38);
-
-        ctx.fillStyle = "#ffffff";
-        ctx.font = "bold 34px monospace";
-        ctx.fillText(`${timeStr} - ${dateStr}`, boxX + 25, boxY + 85);
-
-        // 4. Chèn file logo wtm.png nếu tải được lên canvas
+        // 3. Tải và vẽ file wtm.png đè lên ảnh theo chuẩn thiết kế
         const wtmLogo = new Image();
         wtmLogo.src = 'wtm.png';
         wtmLogo.onload = function() {
-            const logoH = 65;
-            const logoW = (wtmLogo.width / wtmLogo.height) * logoH;
-            ctx.drawImage(wtmLogo, boxX + boxWidth - logoW - 25, boxY + (boxHeight - logoH) / 2, logoW, logoH);
+            const paddingX = 50;
+            const paddingBottom = 50;
+            
+            // Tính toán kích thước wtm.png cân đối theo độ phân giải ảnh chụp thực tế
+            const logoW = canvas.width * 0.55; 
+            const logoH = (wtmLogo.height / wtmLogo.width) * logoW;
+            const logoX = paddingX;
+            const logoY = canvas.height - paddingBottom - logoH - 60; // Chừa khoảng trống phía dưới cho phần giờ/ngày
+
+            // Vẽ logo wtm.png
+            ctx.drawImage(wtmLogo, logoX, logoY, logoW, logoH);
+
+            // Vẽ dòng thời gian hệ thống sinh ra ngay phía dưới logo
+            const timeY = logoY + logoH + 40;
+            
+            ctx.font = `bold ${Math.round(canvas.width * 0.035)}px monospace`;
+            ctx.fillStyle = "#ffffff";
+            ctx.fillText(timeStr, logoX, timeY);
+
+            // Vẽ vạch ngăn cách dọc
+            const timeMeasure = ctx.measureText(timeStr);
+            const sepX = logoX + timeMeasure.width + 25;
+            ctx.fillStyle = "#ffffff";
+            ctx.fillRect(sepX, timeY - Math.round(canvas.width * 0.03), 4, Math.round(canvas.width * 0.035));
+
+            // Vẽ ngày tháng năm
+            ctx.fillStyle = "#ffffff";
+            ctx.fillText(dateStr, sepX + 25, timeY);
+
             finalizeSnapshot(canvas);
         };
         wtmLogo.onerror = function() {
-            // Nếu không tìm thấy file wtm.png thì vẫn xuất ảnh bình thường không lỗi
-            finalizeSnapshot(canvas);
+            alert("Không tìm thấy file wtm.png trên hệ thống! Vui lòng kiểm tra lại đường dẫn file.");
+            closeCameraModal();
         };
     }
 
     function finalizeSnapshot(canvas) {
-        finalProcessedDataUrl = canvas.toDataURL('image/jpeg', 0.9);
+        finalProcessedDataUrl = canvas.toDataURL('image/jpeg', 0.95);
 
-        // Chuyển sang chế độ xem trước (Preview) trên modal
         videoElement.style.display = 'none';
         document.getElementById('liveWatermarkOverlay').style.display = 'none';
         
@@ -489,12 +501,10 @@
             previewCanvasElem.style.display = 'block';
         };
 
-        // Ẩn nút chụp, hiện nút Xác nhận / Chụp lại / Tải về
         document.getElementById('cameraControlButtons').style.display = 'none';
         document.getElementById('confirmControlButtons').style.display = 'flex';
     }
 
-    // Nút chụp lại
     function retakeSnapshot() {
         videoElement.style.display = 'block';
         previewCanvasElem.style.display = 'none';
@@ -503,7 +513,6 @@
         document.getElementById('confirmControlButtons').style.display = 'none';
     }
 
-    // Nút tải ảnh đã chụp về máy
     function downloadCapturedImage() {
         if (!finalProcessedDataUrl) return;
         const link = document.createElement('a');
@@ -512,25 +521,23 @@
         link.click();
     }
 
-    // Nút xác nhận dùng ảnh để nộp đơn
     function confirmCapturedImage() {
         fileMimeType = 'image/jpeg';
         fileData = finalProcessedDataUrl.split(',')[1];
-        isWebcamCaptured = true; // Auto pass không cần AI OCR quét lại
+        isWebcamCaptured = true; 
 
         document.getElementById('previewStatus').style.display = 'block';
         document.getElementById('previewStatus').innerText = "✅ Đã xác nhận ảnh chụp trực tiếp từ Web!";
-        document.getElementById('fileUpload').value = ""; // Xóa input file ngoài
+        document.getElementById('fileUpload').value = ""; 
 
         closeCameraModal();
     }
 
-    // Xử lý khi nhân sự chọn tải file ảnh có sẵn từ máy tính lên
     function handleFileSelect(input) {
         const file = input.files[0];
         if(!file) { fileData = ""; fileMimeType = ""; return; }
         
-        isWebcamCaptured = false; // Ảnh tải từ ngoài vào sẽ đi qua hệ thống quét AI thông minh
+        isWebcamCaptured = false; 
         const reader = new FileReader();
         reader.onload = function(event) {
             const img = new Image();
@@ -594,7 +601,6 @@
         submitBtn.style.color = "#fff";
     }
 
-    // --- LUỒNG XỬ LÝ NỘP ĐƠN & TÍCH HỢP HỆ THỐNG QUÉT AI CŨ CHO ẢNH TẢI LÊN ---
     form.addEventListener('submit', e => {
         e.preventDefault();
         
@@ -621,14 +627,12 @@
         submitBtn.style.backgroundColor = "#ffc107"; 
         submitBtn.style.color = "#000";
 
-        // TRƯỜNG HỢP 1: Ảnh chụp trực tiếp từ Web -> Auto Pass luôn không cần quét AI
         if (isWebcamCaptured) {
             submitBtn.innerText = "✅ Ảnh Web hợp lệ! Đang gửi lên hệ thống...";
             submitToGoogleSheets(isLate);
             return;
         }
 
-        // TRƯỜNG HỢP 2: Ảnh tải lên từ thiết bị -> Kích hoạt hệ thống AI OCR quét viền/metadata đã code trước đó
         submitBtn.innerText = "🔍 Đang phân tích ảnh tải lên...";
         const fileInputOCR = document.getElementById('fileUpload');
         const originalFileForOCR = fileInputOCR.files[0];
@@ -663,7 +667,6 @@
                         
                         ctxOCR.drawImage(imgObj, 0, 0, canvasOCR.width, canvasOCR.height);
                         
-                        // Khoét rỗng tâm ảnh, chỉ quét viền
                         const maskX = canvasOCR.width * 0.15;
                         const maskY = canvasOCR.height * 0.15;
                         const maskW = canvasOCR.width * 0.70;
@@ -728,7 +731,6 @@
         });
     });
 
-    // CÁC HÀM TRA CỨU
     function openModal() { document.getElementById('searchModal').style.display = 'flex'; }
     function closeModal() { document.getElementById('searchModal').style.display = 'none'; document.getElementById('resultContainer').innerHTML = ''; document.getElementById('searchForm').reset(); }
 
