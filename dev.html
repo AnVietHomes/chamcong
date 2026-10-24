@@ -143,24 +143,25 @@
             position: relative; max-width: 550px; width: 100%; background: #000; border-radius: 12px; overflow: hidden;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
-        #webcamVideo { width: 100%; display: block; transform: scaleX(-1); }
+        /* ĐÃ BỎ LẬT GƯƠNG (SCALE X -1) ĐỂ HIỂN THỊ ĐÚNG THỰC TẾ */
+        #webcamVideo { width: 100%; display: block; }
         #capturedCanvasPreview { width: 100%; display: none; }
         
-        /* Lớp phủ Watermark chuẩn theo đúng thiết kế của bạn trên màn hình live */
+        /* Lớp phủ trực tiếp đúng chuẩn file wtm.png + thời gian thực */
         .live-watermark-overlay {
             position: absolute; bottom: 0; left: 0; right: 0;
-            padding: 25px 30px; pointer-events: none;
+            padding: 20px 25px; pointer-events: none;
             display: flex; flex-direction: column; justify-content: flex-end;
-            background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 100%);
+            background: linear-gradient(to top, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0) 100%);
         }
         .live-wtm-img {
-            width: 100%; max-width: 380px; height: auto; display: block; margin-bottom: 8px;
+            width: 75%; max-width: 320px; height: auto; display: block; margin-bottom: 6px;
         }
         .live-time-row {
-            display: flex; align-items: center; gap: 15px; font-family: monospace; color: #fff; font-size: 24px; font-weight: 700;
+            display: flex; align-items: center; gap: 12px; font-family: monospace; color: #fff; font-size: 20px; font-weight: 700;
         }
         .live-time-row .line-sep {
-            width: 3px; height: 24px; background-color: #fff; display: inline-block;
+            width: 3px; height: 20px; background-color: #fff; display: inline-block;
         }
 
         .camera-actions {
@@ -281,13 +282,13 @@
         <video id="webcamVideo" autoplay playsinline></video>
         <canvas id="capturedCanvasPreview"></canvas>
         
-        <!-- Giao diện hiển thị trực tiếp chuẩn mẫu thiết kế -->
+        <!-- Hiển thị trực tiếp tệp wtm.png + đồng hồ thời gian thực chuẩn thiết kế -->
         <div class="live-watermark-overlay" id="liveWatermarkOverlay">
-            <img src="wtm.png" class="live-wtm-img" alt="Watermark Logo">
+            <img src="wtm.png" class="live-wtm-img" alt="Watermark Logo" onerror="this.style.display='none'; alert('Không tìm thấy file wtm.png! Vui lòng kiểm tra lại thư mục nguồn.');">
             <div class="live-time-row">
-                <span id="liveTimeDisplay">13:49:16</span>
+                <span id="liveTimeDisplay">00:00:00</span>
                 <span class="line-sep"></span>
-                <span id="liveDateDisplay">24/10/2026</span>
+                <span id="liveDateDisplay">00/00/0000</span>
             </div>
         </div>
     </div>
@@ -401,7 +402,8 @@
         updateLiveClock();
         window.clockInterval = setInterval(updateLiveClock, 1000);
 
-        navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false })
+        // Sử dụng camera sau ưu tiên (environment) và giữ nguyên chiều thực tế
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } }, audio: false })
         .then(stream => {
             mediaStream = stream;
             videoElement.srcObject = stream;
@@ -429,14 +431,14 @@
         document.getElementById('liveDateDisplay').innerText = dateStr;
     }
 
-    // --- CHỤP ẢNH VÀ GHÉP FILE wtm.png CHUẨN TỶ LỆ ---
+    // --- XUẤT ẢNH CHẤT LƯỢNG CAO, GHÉP TRỰC TIẾP FILE wtm.png ---
     function takeSnapshot() {
         const canvas = document.getElementById('snapshotCanvas');
-        canvas.width = videoElement.videoWidth || 1280;
-        canvas.height = videoElement.videoHeight || 720;
+        canvas.width = videoElement.videoWidth || 1920;
+        canvas.height = videoElement.videoHeight || 1080;
         const ctx = canvas.getContext('2d');
 
-        // 1. Vẽ khung hình từ camera
+        // 1. Vẽ đúng chiều hình ảnh thực tế từ camera (không bị mờ, không bị lật gương)
         ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
 
         // 2. Lấy thông tin thời gian thực
@@ -444,43 +446,43 @@
         const timeStr = now.toLocaleTimeString('vi-VN', { hour12: false });
         const dateStr = now.toLocaleDateString('vi-VN');
 
-        // 3. Tải và vẽ file wtm.png đè lên ảnh theo chuẩn thiết kế
+        // 3. Tải và ghép file wtm.png chuẩn xác vào ảnh
         const wtmLogo = new Image();
+        wtmLogo.crossOrigin = "anonymous";
         wtmLogo.src = 'wtm.png';
         wtmLogo.onload = function() {
-            const paddingX = 50;
-            const paddingBottom = 50;
+            const paddingX = 60;
+            const paddingBottom = 60;
             
-            // Tính toán kích thước wtm.png cân đối theo độ phân giải ảnh chụp thực tế
-            const logoW = canvas.width * 0.55; 
+            const logoW = canvas.width * 0.50; // Kích thước wtm.png cân đối
             const logoH = (wtmLogo.height / wtmLogo.width) * logoW;
             const logoX = paddingX;
-            const logoY = canvas.height - paddingBottom - logoH - 60; // Chừa khoảng trống phía dưới cho phần giờ/ngày
+            const logoY = canvas.height - paddingBottom - logoH - 70;
 
-            // Vẽ logo wtm.png
+            // Vẽ file wtm.png lên ảnh
             ctx.drawImage(wtmLogo, logoX, logoY, logoW, logoH);
 
-            // Vẽ dòng thời gian hệ thống sinh ra ngay phía dưới logo
-            const timeY = logoY + logoH + 40;
+            // Vẽ dòng thời gian hệ thống ngay dưới logo
+            const timeY = logoY + logoH + 45;
+            const fontSize = Math.round(canvas.width * 0.032);
             
-            ctx.font = `bold ${Math.round(canvas.width * 0.035)}px monospace`;
+            ctx.font = `bold ${fontSize}px monospace`;
             ctx.fillStyle = "#ffffff";
             ctx.fillText(timeStr, logoX, timeY);
 
-            // Vẽ vạch ngăn cách dọc
             const timeMeasure = ctx.measureText(timeStr);
-            const sepX = logoX + timeMeasure.width + 25;
+            const sepX = logoX + timeMeasure.width + 30;
+            
             ctx.fillStyle = "#ffffff";
-            ctx.fillRect(sepX, timeY - Math.round(canvas.width * 0.03), 4, Math.round(canvas.width * 0.035));
+            ctx.fillRect(sepX, timeY - Math.round(fontSize * 0.8), 4, fontSize);
 
-            // Vẽ ngày tháng năm
             ctx.fillStyle = "#ffffff";
-            ctx.fillText(dateStr, sepX + 25, timeY);
+            ctx.fillText(dateStr, sepX + 30, timeY);
 
             finalizeSnapshot(canvas);
         };
         wtmLogo.onerror = function() {
-            alert("Không tìm thấy file wtm.png trên hệ thống! Vui lòng kiểm tra lại đường dẫn file.");
+            alert("Lỗi: Không tìm thấy file wtm.png trong thư mục lưu trữ web! Vui lòng tải file wtm.png lên cùng cấp với file index.html.");
             closeCameraModal();
         };
     }
@@ -543,7 +545,7 @@
             const img = new Image();
             img.onload = function() {
                 const canvas = document.createElement('canvas');
-                const MAX_WIDTH = 800; 
+                const MAX_WIDTH = 1200; 
                 const scaleSize = MAX_WIDTH / img.width;
                 canvas.width = MAX_WIDTH;
                 canvas.height = img.height * scaleSize;
@@ -551,7 +553,7 @@
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-                const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+                const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
                 fileMimeType = 'image/jpeg';
                 fileData = dataUrl.split(',')[1];
                 document.getElementById('previewStatus').style.display = 'block';
