@@ -121,56 +121,59 @@
             margin-bottom: 5px;
         }
         .btn-camera-trigger {
-            background-color: #28a745;
+            background-color: #001a72; /* Đồng bộ xanh biển */
             color: #fff;
             border: none;
-            padding: 8px 16px;
+            padding: 10px 20px;
             border-radius: 6px;
-            font-weight: 600;
+            font-weight: 700;
             font-size: 14px;
             cursor: pointer;
             transition: 0.2s;
         }
-        .btn-camera-trigger:hover { background-color: #218838; }
+        .btn-camera-trigger:hover { background-color: #00104a; }
 
-        /* Modal Camera trực tiếp */
+        /* Modal Camera trực tiếp - Khóa khung chuẩn tỷ lệ dọc 3:4 */
         .camera-modal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.95); display: none; justify-content: center; align-items: center; z-index: 2000;
-            flex-direction: column;
+            flex-direction: column; padding: 15px; box-sizing: border-box;
         }
         .camera-box {
-            position: relative; max-width: 550px; width: 100%; background: #000; border-radius: 12px; overflow: hidden;
+            position: relative; width: 100%; max-width: 420px; aspect-ratio: 3/4; 
+            background: #000; border-radius: 12px; overflow: hidden;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
-        /* ĐÃ BỎ LẬT GƯƠNG (SCALE X -1) ĐỂ HIỂN THỊ ĐÚNG THỰC TẾ */
-        #webcamVideo { width: 100%; display: block; }
-        #capturedCanvasPreview { width: 100%; display: none; }
+        #webcamVideo { width: 100%; height: 100%; object-fit: cover; display: block; }
+        #capturedCanvasPreview { width: 100%; height: 100%; object-fit: cover; display: none; }
         
-        /* Lớp phủ trực tiếp đúng chuẩn file wtm.png + thời gian thực */
+        /* Lớp phủ trực tiếp chuẩn tệp wtm.png + thời gian thực */
         .live-watermark-overlay {
             position: absolute; bottom: 0; left: 0; right: 0;
-            padding: 20px 25px; pointer-events: none;
+            padding: 20px; pointer-events: none;
             display: flex; flex-direction: column; justify-content: flex-end;
             background: linear-gradient(to top, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0) 100%);
         }
         .live-wtm-img {
-            width: 75%; max-width: 320px; height: auto; display: block; margin-bottom: 6px;
+            width: 80%; max-width: 280px; height: auto; display: block; margin-bottom: 6px;
         }
         .live-time-row {
-            display: flex; align-items: center; gap: 12px; font-family: monospace; color: #fff; font-size: 20px; font-weight: 700;
+            display: flex; align-items: center; gap: 10px; font-family: monospace; color: #fff; font-size: 18px; font-weight: 700;
         }
         .live-time-row .line-sep {
-            width: 3px; height: 20px; background-color: #fff; display: inline-block;
+            width: 2px; height: 18px; background-color: #fff; display: inline-block;
         }
 
         .camera-actions {
-            margin-top: 20px; display: flex; gap: 15px; flex-wrap: wrap; justify-content: center;
+            margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; width: 100%; max-width: 500px;
         }
-        .btn-cam-action { background: #ffc107; color: #000; font-weight: 800; padding: 10px 24px; border-radius: 30px; border: none; cursor: pointer; }
-        .btn-cam-action.secondary { background: #6c757d; color: #fff; }
-        .btn-cam-action.success { background: #28a745; color: #fff; }
-        .btn-close-cam { background: #dc3545; color: #fff; font-weight: 700; padding: 10px 20px; border-radius: 30px; border: none; cursor: pointer; }
+        /* Đồng bộ màu xanh biển cho các nút chính, bỏ icon */
+        .btn-cam-action { 
+            background: #001a72; color: #fff; font-weight: 700; padding: 10px 20px; border-radius: 30px; border: none; cursor: pointer; font-size: 14px;
+        }
+        .btn-cam-action:hover { background: #00104a; }
+        .btn-cam-action.secondary { background: #6c757d; color: #fff; } /* Nút chụp lại: xám */
+        .btn-close-cam { background: #dc3545; color: #fff; font-weight: 700; padding: 10px 20px; border-radius: 30px; border: none; cursor: pointer; font-size: 14px;} /* Nút hủy: đỏ */
 
         .preview-thumb { margin-top: 8px; font-size: 13px; color: #28a745; font-weight: 700; display: none; }
 
@@ -264,7 +267,7 @@
                 <div class="label-col"><span>7.</span> Tải ảnh minh chứng:</div>
                 <div class="input-col">
                     <div class="camera-options">
-                        <button type="button" class="btn-camera-trigger" onclick="openCameraModal()">📸 Mở camera chụp trực tiếp</button>
+                        <button type="button" class="btn-camera-trigger" onclick="openCameraModal()">Chụp ảnh trực tiếp</button>
                     </div>
                     <input type="file" id="fileUpload" class="form-control" accept="image/*" style="margin-top: 5px;" onchange="handleFileSelect(this)">
                     <div id="previewStatus" class="preview-thumb">✅ Đã có ảnh hợp lệ đính kèm!</div>
@@ -282,9 +285,9 @@
         <video id="webcamVideo" autoplay playsinline></video>
         <canvas id="capturedCanvasPreview"></canvas>
         
-        <!-- Hiển thị trực tiếp tệp wtm.png + đồng hồ thời gian thực chuẩn thiết kế -->
+        <!-- Hiển thị trực tiếp chuẩn thiết kế wtm.png + thời gian thực -->
         <div class="live-watermark-overlay" id="liveWatermarkOverlay">
-            <img src="wtm.png" class="live-wtm-img" alt="Watermark Logo" onerror="this.style.display='none'; alert('Không tìm thấy file wtm.png! Vui lòng kiểm tra lại thư mục nguồn.');">
+            <img src="wtm.png" class="live-wtm-img" alt="Watermark Logo" onerror="this.style.display='none';">
             <div class="live-time-row">
                 <span id="liveTimeDisplay">00:00:00</span>
                 <span class="line-sep"></span>
@@ -293,15 +296,16 @@
         </div>
     </div>
     
+    <!-- Các nút điều hướng với màu sắc đồng bộ, loại bỏ icon -->
     <div class="camera-actions" id="cameraControlButtons">
-        <button type="button" class="btn-cam-action" onclick="takeSnapshot()">📷 CHỤP ẢNH</button>
-        <button type="button" class="btn-close-cam" onclick="closeCameraModal()">Hủy bỏ</button>
+        <button type="button" class="btn-cam-action" onclick="takeSnapshot()">Chụp ảnh</button>
+        <button type="button" class="btn-close-cam" onclick="closeCameraModal()">Hủy</button>
     </div>
 
     <div class="camera-actions" id="confirmControlButtons" style="display: none;">
-        <button type="button" class="btn-cam-action success" onclick="confirmCapturedImage()">✅ Xác nhận dùng ảnh</button>
-        <button type="button" class="btn-cam-action secondary" onclick="retakeSnapshot()">🔄 Chụp lại</button>
-        <button type="button" class="btn-cam-action" onclick="downloadCapturedImage()" style="background: #17a2b8; color: #fff;">📥 Tải ảnh về máy</button>
+        <button type="button" class="btn-cam-action" onclick="confirmCapturedImage()">Xác nhận dùng ảnh</button>
+        <button type="button" class="btn-cam-action secondary" onclick="retakeSnapshot()">Chụp lại</button>
+        <button type="button" class="btn-cam-action" onclick="downloadCapturedImage()">Tải ảnh về máy</button>
         <button type="button" class="btn-close-cam" onclick="closeCameraModal()">Hủy</button>
     </div>
 </div>
@@ -402,8 +406,7 @@
         updateLiveClock();
         window.clockInterval = setInterval(updateLiveClock, 1000);
 
-        // Sử dụng camera sau ưu tiên (environment) và giữ nguyên chiều thực tế
-        navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } }, audio: false })
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', width: { ideal: 1080 }, height: { ideal: 1440 } }, audio: false })
         .then(stream => {
             mediaStream = stream;
             videoElement.srcObject = stream;
@@ -431,40 +434,55 @@
         document.getElementById('liveDateDisplay').innerText = dateStr;
     }
 
-    // --- XUẤT ẢNH CHẤT LƯỢNG CAO, GHÉP TRỰC TIẾP FILE wtm.png ---
+    // --- CROP ẢNH CHUẨN TỶ LỆ DỌC 3:4 VÀ GẮN WATERMARK SẮC NÉT ---
     function takeSnapshot() {
+        const videoW = videoElement.videoWidth;
+        const videoH = videoElement.videoHeight;
+
+        // Tính toán crop khung hình video chuẩn tỷ lệ dọc 3:4 từ camera
+        let cropW = videoW;
+        let cropH = videoW * (4 / 3);
+        let cropX = 0;
+        let cropY = (videoH - cropH) / 2;
+
+        if (cropH > videoH) {
+            cropH = videoH;
+            cropW = videoH * (3 / 4);
+            cropX = (videoW - cropW) / 2;
+            cropY = 0;
+        }
+
         const canvas = document.getElementById('snapshotCanvas');
-        canvas.width = videoElement.videoWidth || 1920;
-        canvas.height = videoElement.videoHeight || 1080;
+        canvas.width = 1200; // Độ phân giải chuẩn ảnh đầu ra
+        canvas.height = 1600; // Tỷ lệ dọc 3:4
         const ctx = canvas.getContext('2d');
 
-        // 1. Vẽ đúng chiều hình ảnh thực tế từ camera (không bị mờ, không bị lật gương)
-        ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+        // 1. Cắt và vẽ khung hình camera vào canvas chuẩn 3:4
+        ctx.drawImage(videoElement, cropX, cropY, cropW, cropH, 0, 0, canvas.width, canvas.height);
 
-        // 2. Lấy thông tin thời gian thực
+        // 2. Lấy thời gian thực
         const now = new Date();
         const timeStr = now.toLocaleTimeString('vi-VN', { hour12: false });
         const dateStr = now.toLocaleDateString('vi-VN');
 
-        // 3. Tải và ghép file wtm.png chuẩn xác vào ảnh
+        // 3. Tải và vẽ file wtm.png với kích thước lớn, sắc nét ở góc dưới
         const wtmLogo = new Image();
         wtmLogo.crossOrigin = "anonymous";
         wtmLogo.src = 'wtm.png';
         wtmLogo.onload = function() {
             const paddingX = 60;
-            const paddingBottom = 60;
+            const paddingBottom = 70;
             
-            const logoW = canvas.width * 0.50; // Kích thước wtm.png cân đối
+            const logoW = canvas.width * 0.65; // Kích thước watermark to rõ theo yêu cầu
             const logoH = (wtmLogo.height / wtmLogo.width) * logoW;
             const logoX = paddingX;
-            const logoY = canvas.height - paddingBottom - logoH - 70;
+            const logoY = canvas.height - paddingBottom - logoH - 80;
 
-            // Vẽ file wtm.png lên ảnh
             ctx.drawImage(wtmLogo, logoX, logoY, logoW, logoH);
 
-            // Vẽ dòng thời gian hệ thống ngay dưới logo
+            // Vẽ thời gian ngay phía dưới logo
             const timeY = logoY + logoH + 45;
-            const fontSize = Math.round(canvas.width * 0.032);
+            const fontSize = Math.round(canvas.width * 0.045);
             
             ctx.font = `bold ${fontSize}px monospace`;
             ctx.fillStyle = "#ffffff";
@@ -482,7 +500,7 @@
             finalizeSnapshot(canvas);
         };
         wtmLogo.onerror = function() {
-            alert("Lỗi: Không tìm thấy file wtm.png trong thư mục lưu trữ web! Vui lòng tải file wtm.png lên cùng cấp với file index.html.");
+            alert("Lỗi: Không tìm thấy file wtm.png! Vui lòng tải file wtm.png lên cùng cấp với file index.html.");
             closeCameraModal();
         };
     }
@@ -581,7 +599,7 @@
                 if(isLate) {
                     showCustomAlert("⚠ NỘP TRỄ HẠN", "Nộp phiếu thành công, nhưng do đã quá thời hạn 5 ngày theo quy định nên phiếu của bạn có thể bị HCNS trả lại hoặc không phê duyệt.", "#c90000");
                 } else {
-                    showCustomAlert("✅ XÁC MINH HOÀN TẤT", "Đã gửi phiếu chấm công và tải ảnh thành công!", "#28a745");
+                    showCustomAlert("✅ XÁC MINH HOÀN TẤT", "Đã gửi phiếu chấm công và tải ảnh thành công!", "#c90000");
                 }
 
                 setTimeout(() => {
