@@ -151,14 +151,15 @@
             position: absolute; bottom: 0; left: 0; right: 0;
             padding: 20px; pointer-events: none;
             display: flex; flex-direction: column; justify-content: flex-end;
-            background: linear-gradient(to top, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0) 100%);
+            background: linear-gradient(to top, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0) 100%);
         }
         .live-wtm-img {
             width: 80%; max-width: 280px; height: auto; display: block; margin-bottom: 8px;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6));
         }
         .live-time-row {
             display: flex; align-items: center; gap: 10px; font-family: monospace; color: #fff; font-size: 18px; font-weight: 700;
-            text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
         }
         .live-time-row .line-sep {
             width: 2px; height: 18px; background-color: #fff; display: inline-block;
@@ -377,7 +378,7 @@
 
     function showCustomAlert(title, msg, color) {
         document.getElementById('customAlertTitle').innerText = title;
-        document.getElementById('customAlertTitle').style.color = color; // Đã nhận màu xanh thành công chuẩn #28a745
+        document.getElementById('customAlertTitle').style.color = color; 
         document.getElementById('customAlertMessage').innerText = msg;
         document.getElementById('customAlertMessage').style.color = "#333";
         document.getElementById('customAlertModal').style.display = 'flex';
@@ -431,7 +432,7 @@
         document.getElementById('liveDateDisplay').innerText = dateStr;
     }
 
-    // --- CROP ẢNH CHUẨN 3:4, HẠ KHOẢNG CÁCH VÀ TỰ ĐỘNG ĐỔI MÀU CHỮ THEO NỀN SÁNG/TỐI ---
+    // --- CROP ẢNH 3:4, TỐI ƯU CHẤT LƯỢNG wtm.png VÀ TẠO HIỆU ỨNG DROP SHADOW ---
     function takeSnapshot() {
         const videoW = videoElement.videoWidth;
         const videoH = videoElement.videoHeight;
@@ -453,6 +454,10 @@
         canvas.height = 1600; 
         const ctx = canvas.getContext('2d');
 
+        // Bật tính năng nội suy chất lượng cao cho canvas để ảnh không bị mờ/vỡ hạt
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+
         // 1. Vẽ hình ảnh camera đã crop
         ctx.drawImage(videoElement, cropX, cropY, cropW, cropH, 0, 0, canvas.width, canvas.height);
 
@@ -467,18 +472,17 @@
             const pixelData = ctx.getImageData(sampleX, sampleY, sampleW, sampleH).data;
             let totalBrightness = 0;
             let count = 0;
-            for (let i = 0; i < pixelData.length; i += 16) { // Lấy mẫu thưa để tối ưu hiệu năng
+            for (let i = 0; i < pixelData.length; i += 16) {
                 const r = pixelData[i];
                 const g = pixelData[i+1];
                 const b = pixelData[i+2];
-                // Công thức tính độ sáng YIQ tiêu chuẩn
                 const brightness = (r * 299 + g * 587 + b * 114) / 1000;
                 totalBrightness += brightness;
                 count++;
             }
             const avgBrightness = totalBrightness / count;
             if (avgBrightness > 150) {
-                textColor = "#111111"; // Nền sáng -> Chữ đen sắc nét
+                textColor = "#111111"; // Nền sáng -> Chữ đen
             }
         } catch (e) {
             console.log("Không thể quét độ sáng nền, mặc định dùng chữ trắng.", e);
@@ -489,22 +493,29 @@
         const timeStr = now.toLocaleTimeString('vi-VN', { hour12: false });
         const dateStr = now.toLocaleDateString('vi-VN');
 
-        // 4. Tải và vẽ file wtm.png với khoảng cách lùi xuống hợp lý
+        // 4. Tải và vẽ file wtm.png với cấu hình Drop Shadow sắc nét cao
         const wtmLogo = new Image();
         wtmLogo.crossOrigin = "anonymous";
         wtmLogo.src = 'wtm.png';
         wtmLogo.onload = function() {
             const paddingX = 60;
-            const paddingBottom = 90; // Hạ thấp khoảng cách xuống so với trước
+            const paddingBottom = 90;
             
             const logoW = canvas.width * 0.65; 
             const logoH = (wtmLogo.height / wtmLogo.width) * logoW;
             const logoX = paddingX;
             const logoY = canvas.height - paddingBottom - logoH - 85;
 
+            // Kích hoạt hiệu ứng Drop Shadow (Đổ bóng mờ nổi khối) cho toàn bộ watermark
+            ctx.shadowColor = textColor === "#ffffff" ? "rgba(0, 0, 0, 0.7)" : "rgba(255, 255, 255, 0.7)";
+            ctx.shadowBlur = 8;
+            ctx.shadowOffsetX = 2;
+            ctx.shadowOffsetY = 2;
+
+            // Vẽ logo wtm.png với độ phân giải và chất lượng tối đa
             ctx.drawImage(wtmLogo, logoX, logoY, logoW, logoH);
 
-            // Vẽ thời gian với màu tự động điều chỉnh (Trắng/Đen)
+            // Vẽ thời gian với hiệu ứng đổ bóng đồng bộ
             const timeY = logoY + logoH + 50;
             const fontSize = Math.round(canvas.width * 0.045);
             
@@ -520,6 +531,12 @@
 
             ctx.fillStyle = textColor;
             ctx.fillText(dateStr, sepX + 30, timeY);
+
+            // Reset lại shadow để không ảnh hưởng các thao tác khác
+            ctx.shadowColor = "transparent";
+            ctx.shadowBlur = 0;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 0;
 
             finalizeSnapshot(canvas);
         };
@@ -623,7 +640,7 @@
                 if(isLate) {
                     showCustomAlert("⚠ NỘP TRỄ HẠN", "Nộp phiếu thành công, nhưng do đã quá thời hạn 5 ngày theo quy định nên phiếu của bạn có thể bị HCNS trả lại hoặc không phê duyệt.", "#28a745");
                 } else {
-                    showCustomAlert("✅ XÁC MINH HOÀN TẤT", "Đã gửi phiếu chấm công và tải ảnh thành công!", "#28a745"); // Đã đổi sang màu xanh lá #28a745
+                    showCustomAlert("✅ XÁC MINH HOÀN TẤT", "Đã gửi phiếu chấm công và tải ảnh thành công!", "#28a745"); 
                 }
 
                 setTimeout(() => {
