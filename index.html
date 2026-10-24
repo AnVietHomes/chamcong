@@ -10,10 +10,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     
-    <!-- THƯ VIỆN AI OCR ĐỂ QUÉT CHỮ -->
+    <!-- THƯ VIỆN AI OCR ĐỂ QUÉT ẢNH TẢI LÊN -->
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-    
-    <!-- THƯ VIỆN THÂM NHẬP METADATA ẢNH -->
     <script src="https://cdn.jsdelivr.net/npm/exif-js"></script>
 
     <style>
@@ -117,91 +115,94 @@
             margin-right: auto;
         }
         
+        .camera-options {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 5px;
+        }
+        .btn-camera-trigger {
+            background-color: #001a72; 
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .btn-camera-trigger:hover { background-color: #00104a; }
+
+        /* Modal Camera trực tiếp - Khóa khung chuẩn tỷ lệ dọc 3:4 */
+        .camera-modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95); display: none; justify-content: center; align-items: center; z-index: 2000;
+            flex-direction: column; padding: 15px; box-sizing: border-box;
+        }
+        .camera-box {
+            position: relative; width: 100%; max-width: 420px; aspect-ratio: 3/4; 
+            background: #000; border-radius: 12px; overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        #webcamVideo { width: 100%; height: 100%; object-fit: cover; display: block; }
+        #capturedCanvasPreview { width: 100%; height: 100%; object-fit: cover; display: none; }
+        
+        .live-watermark-overlay {
+            position: absolute; bottom: 0; left: 0; right: 0;
+            padding: 20px; pointer-events: none;
+            display: flex; flex-direction: column; justify-content: flex-end;
+            background: linear-gradient(to top, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0) 100%);
+        }
+        .live-wtm-img {
+            width: 80%; max-width: 280px; height: auto; display: block; margin-bottom: 8px;
+        }
+        .live-time-row {
+            display: flex; align-items: center; gap: 10px; font-family: monospace; color: #fff; font-size: 18px; font-weight: 700;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+        }
+        .live-time-row .line-sep {
+            width: 2px; height: 18px; background-color: #fff; display: inline-block;
+        }
+
+        .camera-actions {
+            margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; width: 100%; max-width: 500px;
+        }
+        .btn-cam-action { 
+            background: #001a72; color: #fff; font-weight: 700; padding: 10px 20px; border-radius: 30px; border: none; cursor: pointer; font-size: 14px;
+        }
+        .btn-cam-action:hover { background: #00104a; }
+        .btn-cam-action.secondary { background: #6c757d; color: #fff; } 
+        .btn-close-cam { background: #dc3545; color: #fff; font-weight: 700; padding: 10px 20px; border-radius: 30px; border: none; cursor: pointer; font-size: 14px;} 
+
+        .preview-thumb { margin-top: 8px; font-size: 13px; color: #28a745; font-weight: 700; display: none; }
+
         .modal-overlay { 
-            position: fixed; 
-            top: 0; 
-            left: 0; 
-            width: 100%; 
-            height: 100%; 
-            background: rgba(220, 240, 250, 0.85); 
-            backdrop-filter: blur(5px); 
-            display: none; 
-            justify-content: center; 
-            align-items: center; 
-            z-index: 1000; 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(220, 240, 250, 0.85); backdrop-filter: blur(5px); 
+            display: none; justify-content: center; align-items: center; z-index: 1000; 
         }
         .modal-box { 
-            background: #fff; 
-            width: 450px; 
-            padding: 40px; 
-            border-radius: 16px; 
-            box-shadow: 0 15px 40px rgba(0,0,0,0.1); 
-            position: relative; 
+            background: #fff; width: 450px; padding: 40px; border-radius: 16px; 
+            box-shadow: 0 15px 40px rgba(0,0,0,0.1); position: relative; 
         }
         .modal-title { 
-            text-align: center; 
-            font-weight: 800; 
-            color: #001a72; 
-            font-size: 20px; 
-            margin-bottom: 30px; 
-            text-transform: uppercase; 
+            text-align: center; font-weight: 800; color: #001a72; font-size: 20px; margin-bottom: 30px; text-transform: uppercase; 
         }
         .close-btn { 
-            position: absolute; 
-            top: 15px; 
-            right: 20px; 
-            font-size: 24px; 
-            cursor: pointer; 
-            color: #999; 
+            position: absolute; top: 15px; right: 20px; font-size: 24px; cursor: pointer; color: #999; 
         }
-        
         .input-group-custom { 
-            display: flex; 
-            align-items: center; 
-            border: 1px solid #ccc; 
-            border-radius: 6px; 
-            overflow: hidden; 
-            margin-bottom: 20px; 
-            background: #fff;
+            display: flex; align-items: center; border: 1px solid #ccc; border-radius: 6px; overflow: hidden; margin-bottom: 20px; background: #fff;
         }
         .input-group-custom .prefix { 
-            background-color: #001a72; 
-            color: white; 
-            padding: 8px 15px; 
-            font-weight: 700; 
-            font-size: 15px;
+            background-color: #001a72; color: white; padding: 8px 15px; font-weight: 700; font-size: 15px;
         }
         .input-group-custom input { 
-            border: none; 
-            padding: 8px 10px; 
-            width: 100%; 
-            outline: none; 
-            font-size: 15px; 
-            font-family: 'Manrope', sans-serif;
+            border: none; padding: 8px 10px; width: 100%; outline: none; font-size: 15px; font-family: 'Manrope', sans-serif;
         }
-        
-        .custom-input-label { 
-            font-size: 12px; 
-            font-weight: 600; 
-            margin-bottom: 5px; 
-            color: #333; 
-        }
-        .btn-search { 
-            background-color: #001a72; 
-            color: #fff; 
-            border-radius: 30px; 
-            padding: 10px; 
-            width: 100%; 
-            font-weight: 700; 
-            border: none; 
-            margin-top: 10px; 
-        }
-        #resultContainer { 
-            margin-top: 20px; 
-            max-height: 200px; 
-            overflow-y: auto; 
-            font-size: 13px;
-        }
+        .custom-input-label { font-size: 12px; font-weight: 600; margin-bottom: 5px; color: #333; }
+        .btn-search { background-color: #001a72; color: #fff; border-radius: 30px; padding: 10px; width: 100%; font-weight: 700; border: none; margin-top: 10px; }
+        #resultContainer { margin-top: 20px; max-height: 200px; overflow-y: auto; font-size: 13px;}
     </style>
 </head>
 <body>
@@ -223,9 +224,7 @@
 
             <div class="row-item">
                 <div class="label-col"><span>1.</span> Họ và tên:</div>
-                <div class="input-col">
-                    <input type="text" class="form-control" name="hoTen" required placeholder="Nguyễn Văn A">
-                </div>
+                <div class="input-col"><input type="text" class="form-control" name="hoTen" required placeholder="Nguyễn Văn A"></div>
             </div>
 
             <div class="row-item">
@@ -250,29 +249,27 @@
 
             <div class="row-item">
                 <div class="label-col"><span>4.</span> Ngày:</div>
-                <div class="input-col">
-                    <input type="date" class="form-control" name="ngay" required>
-                </div>
+                <div class="input-col"><input type="date" class="form-control" name="ngay" required></div>
             </div>
 
             <div class="row-item">
                 <div class="label-col"><span>5.</span> Giờ checkin/ checkout:</div>
-                <div class="input-col">
-                    <input type="text" class="form-control" name="gio" required placeholder="08:45">
-                </div>
+                <div class="input-col"><input type="text" class="form-control" name="gio" required placeholder="08:45"></div>
             </div>
 
             <div class="row-item">
                 <div class="label-col"><span>6.</span> Lý do:</div>
-                <div class="input-col">
-                    <input type="text" class="form-control" name="lyDo" required placeholder="Gặp khách hàng...">
-                </div>
+                <div class="input-col"><input type="text" class="form-control" name="lyDo" required placeholder="Gặp khách hàng..."></div>
             </div>
 
             <div class="row-item">
-                <div class="label-col"><span>7.</span> Tải ảnh:</div>
+                <div class="label-col"><span>7.</span> Tải ảnh minh chứng:</div>
                 <div class="input-col">
-                    <input type="file" id="fileUpload" class="form-control" accept="image/*" required>
+                    <div class="camera-options">
+                        <button type="button" class="btn-camera-trigger" onclick="openCameraModal()">Chụp ảnh trực tiếp</button>
+                    </div>
+                    <input type="file" id="fileUpload" class="form-control" accept="image/*" style="margin-top: 5px;" onchange="handleFileSelect(this)">
+                    <div id="previewStatus" class="preview-thumb">✅ Đã có ảnh hợp lệ đính kèm!</div>
                 </div>
             </div>
 
@@ -280,6 +277,37 @@
         </form>
     </div>
 </div>
+
+<!-- MODAL GIAO DIỆN CAMERA TRỰC TIẾP -->
+<div class="camera-modal" id="cameraModal">
+    <div class="camera-box">
+        <video id="webcamVideo" autoplay playsinline></video>
+        <canvas id="capturedCanvasPreview"></canvas>
+        
+        <div class="live-watermark-overlay" id="liveWatermarkOverlay">
+            <img src="wtm.png" class="live-wtm-img" alt="Watermark Logo" onerror="this.style.display='none';">
+            <div class="live-time-row">
+                <span id="liveTimeDisplay">00:00:00</span>
+                <span class="line-sep"></span>
+                <span id="liveDateDisplay">00/00/0000</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="camera-actions" id="cameraControlButtons">
+        <button type="button" class="btn-cam-action" onclick="takeSnapshot()">Chụp ảnh</button>
+        <button type="button" class="btn-close-cam" onclick="closeCameraModal()">Hủy</button>
+    </div>
+
+    <div class="camera-actions" id="confirmControlButtons" style="display: none;">
+        <button type="button" class="btn-cam-action" onclick="confirmCapturedImage()">Xác nhận dùng ảnh</button>
+        <button type="button" class="btn-cam-action secondary" onclick="retakeSnapshot()">Chụp lại</button>
+        <button type="button" class="btn-cam-action" onclick="downloadCapturedImage()">Tải ảnh về máy</button>
+        <button type="button" class="btn-close-cam" onclick="closeCameraModal()">Hủy</button>
+    </div>
+</div>
+
+<canvas id="snapshotCanvas" style="display:none;"></canvas>
 
 <!-- POPUP THÔNG BÁO -->
 <div class="modal-overlay" id="customAlertModal">
@@ -298,9 +326,7 @@
         <div class="modal-title">TRA CỨU LỊCH SỬ/ TRẠNG THÁI</div>
         <form id="searchForm">
             <div class="custom-input-label">Tên nhân viên</div>
-            <div class="input-group-custom">
-                <input type="text" id="searchName" placeholder="Nhập tên nhân viên" required>
-            </div>
+            <div class="input-group-custom"><input type="text" id="searchName" placeholder="Nhập tên nhân viên" required></div>
             <div class="custom-input-label">Mã nhân viên</div>
             <div class="input-group-custom">
                 <div class="prefix">AVH</div>
@@ -313,9 +339,6 @@
 </div>
 
 <script>
-    // ==========================================
-    // DÁN LINK API WEB APP VÀO ĐÂY
-    // ==========================================
     const scriptURL = 'https://script.google.com/macros/s/AKfycbxiSMKHNSSRaJu5w_AYq07v_a-lb3eTeo0UXNJjLF8bi8KxQ5zw3h4kIzOqmZck01ty/exec';
 
     function checkAndOpenTracuu() {
@@ -324,11 +347,9 @@
         }
     }
 
-    // TẢI DANH SÁCH PHÒNG BAN TỪ GOOGLE SHEET
     window.addEventListener('DOMContentLoaded', () => {
         const formData = new FormData();
         formData.append('action', 'getDepartments');
-        
         fetch(scriptURL, { method: 'POST', body: formData })
         .then(res => res.json())
         .then(data => {
@@ -339,9 +360,7 @@
                     select.innerHTML += `<option value="${dept}">Phòng ${dept}</option>`;
                 });
             }
-        })
-        .catch(err => console.log("Lỗi tải phòng ban:", err));
-
+        }).catch(err => console.log("Lỗi tải phòng ban:", err));
         checkAndOpenTracuu();
     });
     
@@ -353,12 +372,14 @@
 
     let fileData = "";
     let fileMimeType = "";
+    let isWebcamCaptured = false; 
+    let finalProcessedDataUrl = ""; 
 
     function showCustomAlert(title, msg, color) {
         document.getElementById('customAlertTitle').innerText = title;
-        document.getElementById('customAlertTitle').style.color = color;
+        document.getElementById('customAlertTitle').style.color = color; // Đã nhận màu xanh thành công chuẩn #28a745
         document.getElementById('customAlertMessage').innerText = msg;
-        document.getElementById('customAlertMessage').style.color = (color === "#c90000") ? "#c90000" : "#333";
+        document.getElementById('customAlertMessage').style.color = "#333";
         document.getElementById('customAlertModal').style.display = 'flex';
     }
 
@@ -366,19 +387,207 @@
         document.getElementById('customAlertModal').style.display = 'none';
     }
 
-    // XỬ LÝ ẢNH CLIENT ĐỂ NÉN GỬI GOOGLE SHEETS
-    document.getElementById('fileUpload').addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if(!file) { 
-            fileData = ""; fileMimeType = ""; return; 
-        }
+    let mediaStream = null;
+    const videoElement = document.getElementById('webcamVideo');
+    const previewCanvasElem = document.getElementById('capturedCanvasPreview');
+
+    function openCameraModal() {
+        isWebcamCaptured = false;
+        document.getElementById('cameraModal').style.display = 'flex';
+        videoElement.style.display = 'block';
+        previewCanvasElem.style.display = 'none';
+        document.getElementById('liveWatermarkOverlay').style.display = 'flex';
+        document.getElementById('cameraControlButtons').style.display = 'flex';
+        document.getElementById('confirmControlButtons').style.display = 'none';
         
+        updateLiveClock();
+        window.clockInterval = setInterval(updateLiveClock, 1000);
+
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', width: { ideal: 1080 }, height: { ideal: 1440 } }, audio: false })
+        .then(stream => {
+            mediaStream = stream;
+            videoElement.srcObject = stream;
+        })
+        .catch(err => {
+            console.error(err);
+            alert("Không thể mở được camera! Vui lòng cấp quyền camera cho trình duyệt.");
+            closeCameraModal();
+        });
+    }
+
+    function closeCameraModal() {
+        if (mediaStream) {
+            mediaStream.getTracks().forEach(track => track.stop());
+        }
+        clearInterval(window.clockInterval);
+        document.getElementById('cameraModal').style.display = 'none';
+    }
+
+    function updateLiveClock() {
+        const now = new Date();
+        const timeStr = now.toLocaleTimeString('vi-VN', { hour12: false });
+        const dateStr = now.toLocaleDateString('vi-VN');
+        document.getElementById('liveTimeDisplay').innerText = timeStr;
+        document.getElementById('liveDateDisplay').innerText = dateStr;
+    }
+
+    // --- CROP ẢNH CHUẨN 3:4, HẠ KHOẢNG CÁCH VÀ TỰ ĐỘNG ĐỔI MÀU CHỮ THEO NỀN SÁNG/TỐI ---
+    function takeSnapshot() {
+        const videoW = videoElement.videoWidth;
+        const videoH = videoElement.videoHeight;
+
+        let cropW = videoW;
+        let cropH = videoW * (4 / 3);
+        let cropX = 0;
+        let cropY = (videoH - cropH) / 2;
+
+        if (cropH > videoH) {
+            cropH = videoH;
+            cropW = videoH * (3 / 4);
+            cropX = (videoW - cropW) / 2;
+            cropY = 0;
+        }
+
+        const canvas = document.getElementById('snapshotCanvas');
+        canvas.width = 1200; 
+        canvas.height = 1600; 
+        const ctx = canvas.getContext('2d');
+
+        // 1. Vẽ hình ảnh camera đã crop
+        ctx.drawImage(videoElement, cropX, cropY, cropW, cropH, 0, 0, canvas.width, canvas.height);
+
+        // 2. Thuật toán tự động đo độ sáng vùng đặt chữ (Góc dưới trái) để quyết định màu chữ (Đen hay Trắng)
+        const sampleX = Math.round(canvas.width * 0.08);
+        const sampleY = Math.round(canvas.height * 0.85);
+        const sampleW = Math.round(canvas.width * 0.5);
+        const sampleH = Math.round(canvas.height * 0.1);
+        
+        let textColor = "#ffffff"; // Mặc định chữ trắng
+        try {
+            const pixelData = ctx.getImageData(sampleX, sampleY, sampleW, sampleH).data;
+            let totalBrightness = 0;
+            let count = 0;
+            for (let i = 0; i < pixelData.length; i += 16) { // Lấy mẫu thưa để tối ưu hiệu năng
+                const r = pixelData[i];
+                const g = pixelData[i+1];
+                const b = pixelData[i+2];
+                // Công thức tính độ sáng YIQ tiêu chuẩn
+                const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+                totalBrightness += brightness;
+                count++;
+            }
+            const avgBrightness = totalBrightness / count;
+            if (avgBrightness > 150) {
+                textColor = "#111111"; // Nền sáng -> Chữ đen sắc nét
+            }
+        } catch (e) {
+            console.log("Không thể quét độ sáng nền, mặc định dùng chữ trắng.", e);
+        }
+
+        // 3. Lấy thời gian thực
+        const now = new Date();
+        const timeStr = now.toLocaleTimeString('vi-VN', { hour12: false });
+        const dateStr = now.toLocaleDateString('vi-VN');
+
+        // 4. Tải và vẽ file wtm.png với khoảng cách lùi xuống hợp lý
+        const wtmLogo = new Image();
+        wtmLogo.crossOrigin = "anonymous";
+        wtmLogo.src = 'wtm.png';
+        wtmLogo.onload = function() {
+            const paddingX = 60;
+            const paddingBottom = 90; // Hạ thấp khoảng cách xuống so với trước
+            
+            const logoW = canvas.width * 0.65; 
+            const logoH = (wtmLogo.height / wtmLogo.width) * logoW;
+            const logoX = paddingX;
+            const logoY = canvas.height - paddingBottom - logoH - 85;
+
+            ctx.drawImage(wtmLogo, logoX, logoY, logoW, logoH);
+
+            // Vẽ thời gian với màu tự động điều chỉnh (Trắng/Đen)
+            const timeY = logoY + logoH + 50;
+            const fontSize = Math.round(canvas.width * 0.045);
+            
+            ctx.font = `bold ${fontSize}px monospace`;
+            ctx.fillStyle = textColor;
+            ctx.fillText(timeStr, logoX, timeY);
+
+            const timeMeasure = ctx.measureText(timeStr);
+            const sepX = logoX + timeMeasure.width + 30;
+            
+            ctx.fillStyle = textColor;
+            ctx.fillRect(sepX, timeY - Math.round(fontSize * 0.8), 4, fontSize);
+
+            ctx.fillStyle = textColor;
+            ctx.fillText(dateStr, sepX + 30, timeY);
+
+            finalizeSnapshot(canvas);
+        };
+        wtmLogo.onerror = function() {
+            alert("Lỗi: Không tìm thấy file wtm.png! Vui lòng tải file wtm.png lên cùng cấp với file index.html.");
+            closeCameraModal();
+        };
+    }
+
+    function finalizeSnapshot(canvas) {
+        finalProcessedDataUrl = canvas.toDataURL('image/jpeg', 0.95);
+
+        videoElement.style.display = 'none';
+        document.getElementById('liveWatermarkOverlay').style.display = 'none';
+        
+        previewCanvasElem.width = canvas.width;
+        previewCanvasElem.height = canvas.height;
+        const previewCtx = previewCanvasElem.getContext('2d');
+        const tempImg = new Image();
+        tempImg.src = finalProcessedDataUrl;
+        tempImg.onload = function() {
+            previewCtx.drawImage(tempImg, 0, 0);
+            previewCanvasElem.style.display = 'block';
+        };
+
+        document.getElementById('cameraControlButtons').style.display = 'none';
+        document.getElementById('confirmControlButtons').style.display = 'flex';
+    }
+
+    function retakeSnapshot() {
+        videoElement.style.display = 'block';
+        previewCanvasElem.style.display = 'none';
+        document.getElementById('liveWatermarkOverlay').style.display = 'flex';
+        document.getElementById('cameraControlButtons').style.display = 'flex';
+        document.getElementById('confirmControlButtons').style.display = 'none';
+    }
+
+    function downloadCapturedImage() {
+        if (!finalProcessedDataUrl) return;
+        const link = document.createElement('a');
+        link.download = `AnVietHomes_ChamCong_${new Date().toISOString().slice(0,10)}.jpg`;
+        link.href = finalProcessedDataUrl;
+        link.click();
+    }
+
+    function confirmCapturedImage() {
+        fileMimeType = 'image/jpeg';
+        fileData = finalProcessedDataUrl.split(',')[1];
+        isWebcamCaptured = true; 
+
+        document.getElementById('previewStatus').style.display = 'block';
+        document.getElementById('previewStatus').innerText = "✅ Đã xác nhận ảnh chụp trực tiếp từ Web!";
+        document.getElementById('fileUpload').value = ""; 
+
+        closeCameraModal();
+    }
+
+    function handleFileSelect(input) {
+        const file = input.files[0];
+        if(!file) { fileData = ""; fileMimeType = ""; return; }
+        
+        isWebcamCaptured = false; 
         const reader = new FileReader();
         reader.onload = function(event) {
             const img = new Image();
             img.onload = function() {
                 const canvas = document.createElement('canvas');
-                const MAX_WIDTH = 800; 
+                const MAX_WIDTH = 1200; 
                 const scaleSize = MAX_WIDTH / img.width;
                 canvas.width = MAX_WIDTH;
                 canvas.height = img.height * scaleSize;
@@ -386,16 +595,17 @@
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-                const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+                const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
                 fileMimeType = 'image/jpeg';
                 fileData = dataUrl.split(',')[1];
+                document.getElementById('previewStatus').style.display = 'block';
+                document.getElementById('previewStatus').innerText = "✅ Đã chọn ảnh từ thiết bị!";
             }
             img.src = event.target.result;
         };
         reader.readAsDataURL(file);
-    });
+    }
 
-    // HÀM GỬI LÊN SHEET SAU KHI VƯỢT QUA AI
     function submitToGoogleSheets(isLate) {
         const formData = new FormData(form);
         formData.append('coHinhAnh', 'Có'); 
@@ -411,14 +621,14 @@
                 submitBtn.style.color = "#fff";
                 
                 if(isLate) {
-                    showCustomAlert("⚠ NỘP TRỄ HẠN", "Nộp phiếu thành công, nhưng do đã quá thời hạn 5 ngày theo quy định nên phiếu của bạn có thể bị HCNS trả lại hoặc không phê duyệt.", "#c90000");
+                    showCustomAlert("⚠ NỘP TRỄ HẠN", "Nộp phiếu thành công, nhưng do đã quá thời hạn 5 ngày theo quy định nên phiếu của bạn có thể bị HCNS trả lại hoặc không phê duyệt.", "#28a745");
                 } else {
-                    showCustomAlert("✅ XÁC MINH HOÀN TẤT", "Đã gửi phiếu chấm công và tải ảnh thành công!", "#28a745");
+                    showCustomAlert("✅ XÁC MINH HOÀN TẤT", "Đã gửi phiếu chấm công và tải ảnh thành công!", "#28a745"); // Đã đổi sang màu xanh lá #28a745
                 }
 
                 setTimeout(() => {
                     form.reset(); fileData = ""; fileMimeType = ""; 
-                    document.getElementById('fileUpload').value = ""; 
+                    document.getElementById('previewStatus').style.display = 'none';
                     resetButton();
                 }, 2000); 
             } else {
@@ -435,14 +645,11 @@
         submitBtn.style.color = "#fff";
     }
 
-    // ==========================================
-    // QUÉT KÉP: METADATA EXIF & KHOÉT RỖNG TÂM ẢNH
-    // ==========================================
     form.addEventListener('submit', e => {
         e.preventDefault();
         
         if (fileData === "") {
-            showCustomAlert("❌ LỖI TRỐNG ẢNH", "Vui lòng tải lên hình ảnh minh chứng bắt buộc.", "#c90000"); return;
+            showCustomAlert("❌ LỖI TRỐNG ẢNH", "Vui lòng chụp ảnh trực tiếp hoặc tải lên hình ảnh minh chứng bắt buộc.", "#c90000"); return;
         }
         
         const ngayInput = document.querySelector('input[name="ngay"]').value;
@@ -452,7 +659,6 @@
         const selMonths = selDate.getFullYear() * 12 + selDate.getMonth();
         const nowMonths = now.getFullYear() * 12 + now.getMonth();
 
-        // ĐIỀU KIỆN HARD BLOCK
         if (selMonths < nowMonths && now.getDate() > 3) {
             showCustomAlert("❌ YÊU CẦU BỊ TỪ CHỐI", "Đã quá hạn nộp phiếu chấm công bổ sung.", "#c90000"); return; 
         }
@@ -464,63 +670,60 @@
         submitBtn.disabled = true;
         submitBtn.style.backgroundColor = "#ffc107"; 
         submitBtn.style.color = "#000";
-        
+
+        if (isWebcamCaptured) {
+            submitBtn.innerText = "✅ Ảnh Web hợp lệ! Đang gửi lên hệ thống...";
+            submitToGoogleSheets(isLate);
+            return;
+        }
+
+        submitBtn.innerText = "🔍 Đang phân tích ảnh tải lên...";
         const fileInputOCR = document.getElementById('fileUpload');
         const originalFileForOCR = fileInputOCR.files[0];
-        
-        submitBtn.innerText = "🔍 Đang truy xuất Metadata ảnh...";
 
-        // LỚP 1: QUÉT METADATA
+        if(!originalFileForOCR) {
+            submitToGoogleSheets(isLate);
+            return;
+        }
+
         EXIF.getData(originalFileForOCR, function() {
             const software = EXIF.getTag(this, "Software") || "";
             const make = EXIF.getTag(this, "Make") || "";
             const allExif = String(software + " " + make).toLowerCase();
 
             if (allExif.includes("timemark")) {
-                submitBtn.innerText = "✅ Quét Metadata thành công! Đang tải lên...";
+                submitBtn.innerText = "✅ Xác thực Timemark thành công!";
                 submitToGoogleSheets(isLate);
             } else {
-                
-                // LỚP 2: TÁCH NỀN VÀ KHOÉT RỖNG TÂM ẢNH OCR
-                submitBtn.innerText = "🔍 Đang nạp dữ liệu AI...";
+                submitBtn.innerText = "🔍 Kích hoạt AI quét khung viền ảnh...";
                 
                 const readerOCR = new FileReader();
                 readerOCR.onload = function(event) {
                     const imgObj = new Image();
                     imgObj.onload = function() {
-                        
                         const canvasOCR = document.createElement('canvas');
                         const ctxOCR = canvasOCR.getContext('2d');
                         
-                        // ĐÃ SỬA LỖI IMG.WIDTH TẠI ĐÂY -> CHUYỂN THÀNH IMGOBJ.WIDTH
                         const MAX_OCR_WIDTH = 800; 
                         const scaleOCR = Math.min(1, MAX_OCR_WIDTH / imgObj.width);
                         canvasOCR.width = imgObj.width * scaleOCR;
                         canvasOCR.height = imgObj.height * scaleOCR;
                         
-                        // Vẽ toàn bộ bức ảnh lên Canvas
                         ctxOCR.drawImage(imgObj, 0, 0, canvasOCR.width, canvasOCR.height);
                         
-                        // THUẬT TOÁN KHOÉT RỖNG TÂM ẢNH
                         const maskX = canvasOCR.width * 0.15;
                         const maskY = canvasOCR.height * 0.15;
                         const maskW = canvasOCR.width * 0.70;
                         const maskH = canvasOCR.height * 0.55;
-                        
                         ctxOCR.fillStyle = "#ffffff";
                         ctxOCR.fillRect(maskX, maskY, maskW, maskH);
                         
-                        // TÁCH NỀN (Binarization)
                         const imageData = ctxOCR.getImageData(0, 0, canvasOCR.width, canvasOCR.height);
                         const data = imageData.data;
                         
                         for (let i = 0; i < data.length; i += 4) {
                             const r = data[i]; const g = data[i+1]; const b = data[i+2];
-                            
-                            const isWhite = (r > 190 && g > 190 && b > 190);
-                            const isYellow = (r > 170 && g > 140 && b < 130);
-                            
-                            if (isWhite || isYellow) {
+                            if ((r > 190 && g > 190 && b > 190) || (r > 170 && g > 140 && b < 130)) {
                                 data[i] = 0; data[i+1] = 0; data[i+2] = 0;
                             } else {
                                 data[i] = 255; data[i+1] = 255; data[i+2] = 255;
@@ -528,14 +731,11 @@
                         }
                         ctxOCR.putImageData(imageData, 0, 0);
                         
-                        const ocrBase64 = canvasOCR.toDataURL('image/jpeg', 0.9); 
-                        
                         Tesseract.recognize(
-                            ocrBase64,
+                            canvasOCR.toDataURL('image/jpeg', 0.9),
                             'eng+vie',
                             { 
                                 logger: m => { 
-                                    // TÍNH NĂNG MỚI: Hiển thị chi tiết trạng thái để bạn không tưởng web bị đơ
                                     const statusMap = {
                                         'loading tesseract core': 'Tải lõi AI',
                                         'loading language traineddata': 'Tải ngôn ngữ AI',
@@ -547,31 +747,24 @@
                                 } 
                             }
                         ).then(({ data: { text } }) => {
-                            
                             const cleanText = text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d");
                             const noSpaceText = cleanText.replace(/[^a-z0-9:]/g, ''); 
                             let score = 0;
                             
-                            const vipKeywords = ['timemark', 'tinemark', 'timenark', 'diemdanh', 'chanthuc', 'camket', 'verified'];
+                            const vipKeywords = ['timemark', 'tinemark', 'timenark', 'diemdanh', 'chanthuc', 'camket', 'verified', 'anviet'];
                             if (vipKeywords.some(kw => noSpaceText.includes(kw))) score += 100;
-                            
                             if (/\d{1,2}:\d{2}/.test(noSpaceText)) score += 50; 
-                            const dateKeywords = ['thang', 'nam', 'thu', 'ngay', '2026', '2025'];
-                            if (dateKeywords.some(kw => noSpaceText.includes(kw))) score += 50; 
-                            
-                            const locationKeywords = ['phuong', 'quan', 'thanhpho', 'tinh', 'quoc', 'viet'];
-                            if (locationKeywords.some(kw => noSpaceText.includes(kw))) score += 50; 
+                            if (['thang', 'nam', 'thu', 'ngay', '2026', '2025'].some(kw => noSpaceText.includes(kw))) score += 50; 
                             
                             if (score >= 100) {
-                                submitBtn.innerText = "✅ AI Xác minh xong! Đang tải...";
+                                submitBtn.innerText = "✅ AI Xác minh xong!";
                                 submitToGoogleSheets(isLate);
                             } else {
                                 showCustomAlert("❌ ẢNH KHÔNG HỢP LỆ", "Ảnh tải lên không hợp lệ do đã qua chỉnh sửa hoặc không dùng đúng phần mềm chụp Timemark, vui lòng kiểm tra và thực hiện lại đúng yêu cầu.", "#c90000");
                                 resetButton();
                             }
                         }).catch(err => {
-                            console.error(err);
-                            showCustomAlert("⚠️ LỖI QUÉT ẢNH", "Hệ thống AI gặp sự cố. Vui lòng tải lại trang và thử lại.", "#c90000");
+                            showCustomAlert("⚠️ LỖI QUÉT ẢNH", "Hệ thống AI gặp sự cố. Vui lòng thử lại.", "#c90000");
                             resetButton();
                         });
                     };
@@ -582,7 +775,6 @@
         });
     });
 
-    // CÁC HÀM TRA CỨU
     function openModal() { document.getElementById('searchModal').style.display = 'flex'; }
     function closeModal() { document.getElementById('searchModal').style.display = 'none'; document.getElementById('resultContainer').innerHTML = ''; document.getElementById('searchForm').reset(); }
 
